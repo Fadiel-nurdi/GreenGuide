@@ -1,0 +1,58 @@
+[
+  {
+    "id": "p-001",
+    "name": "Padi",
+    "latinName": "Oryza sativa",
+    "landType": "Alluvial",
+    "minAltitude": 0,
+    "maxAltitude": 1500,
+    "minPH": 5.5,
+    "maxPH": 7.0,
+    "minRainfall": 1200,
+    "maxRainfall": 2000,
+    "description": "Padi cocok di lahan sawah berpengairan baik dengan pH sedikit asam hingga netral.",
+    "imageUrl": ""
+  },
+  {
+    "id": "p-002",
+    "name": "Kopi Arabika",
+    "latinName": "Coffea arabica",
+    "landType": "Andosol",
+    "minAltitude": 1000,
+    "maxAltitude": 2000,
+    "minPH": 5.5,
+    "maxPH": 6.5,
+    "minRainfall": 1500,
+    "maxRainfall": 2500,
+    "description": "Menyukai suhu sejuk di dataran tinggi dan tanah vulkanik kaya bahan organik.",
+    "imageUrl": ""
+  },
+  {
+    "id": "p-003",
+    "name": "Kakao",
+    "latinName": "Theobroma cacao",
+    "landType": "Latosol",
+    "minAltitude": 0,
+    "maxAltitude": 800,
+    "minPH": 6.0,
+    "maxPH": 7.5,
+    "minRainfall": 1500,
+    "maxRainfall": 3000,
+    "description": "Kakao memerlukan naungan ringan dan curah hujan tinggi.",
+    "imageUrl": ""
+  },
+  {
+    "id": "p-004",
+    "name": "Kentang",
+    "latinName": "Solanum tuberosum",
+    "landType": "Andosol",
+    "minAltitude": 800,
+    "maxAltitude": 2000,
+    "minPH": 5.0,
+    "maxPH": 6.5,
+    "minRainfall": 1000,
+    "maxRainfall": 1500,
+    "description": "Cocok di dataran tinggi bersuhu rendah, tanah gembur dan drainase baik.",
+    "imageUrl": ""
+  }
+]

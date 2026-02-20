@@ -1,0 +1,82 @@
+name: greenguide_app
+description: A Green Guide demo app scaffold built with Flutter & Dart.
+publish_to: "none"
+
+version: 1.0.0+1
+
+environment:
+  sdk: ">=3.5.0 <4.0.0"
+
+dependencies:
+  flutter:
+    sdk: flutter
+
+  cupertino_icons: ^1.0.8
+
+  # ================= STATE MANAGEMENT =================
+  flutter_riverpod: ^2.5.1
+  provider: ^6.1.2
+
+  # ================= ROUTING =================
+  go_router: ^14.2.6
+
+  # ================= NETWORK & LOCAL STORAGE =================
+  http: ^1.2.2
+  shared_preferences: ^2.3.3
+  path_provider: ^2.1.4
+  connectivity_plus: ^5.0.2 # online / offline detection
+
+  # ================= FIREBASE =================
+  firebase_core: ^3.8.0
+  firebase_auth: ^5.3.1
+  cloud_firestore: ^5.5.0
+  firebase_storage: ^12.0.0
+  cloud_functions: ^5.6.2
+
+  # ================= MEDIA =================
+  image_picker: ^1.0.7
+  image: ^4.2.0
+
+  # ================= UTIL =================
+  intl: ^0.19.0
+  google_fonts: ^6.2.1
+
+dev_dependencies:
+  flutter_test:
+    sdk: flutter
+
+  flutter_lints: ^4.0.0
+
+  # ================= APP ICON =================
+  flutter_launcher_icons: ^0.13.1
+
+flutter:
+  uses-material-design: true
+
+  assets:
+    - assets/Images/bghome1.jpg
+    - assets/Images/daratanrendah.jpg
+    - assets/Images/LoadingTA.png
+    - assets/Images/Logo.png
+    - assets/Images/teacher.jpeg
+    - assets/Images/teacher2.png
+    - assets/Images/mangroveset.jpg
+    - assets/Images/teachermendata.jpg
+    - assets/Images/underhome.png
+    - assets/Images/bgjeniseko.png
+    - assets/Images/bgmangrove.png
+    - assets/Images/bgdataranrendah.png
+    - assets/Images/bgupdateterakhir.png
+    - assets/Images/bg_adminonline.jpg
+    - assets/Images/bg_supertotaladmin.jpg
+    - assets/Images/kocak.jpg
+    - assets/mock/bankmangrove.json
+    - assets/mock/plants.json
+    - assets/mock/Bank_Dataran_rendah.json
+
+# ================= LAUNCHER ICON CONFIG =================
+flutter_launcher_icons:
+  android: true
+  ios: true
+  image_path: "assets/Images/Logo.png"
+  min_sdk_android: 21

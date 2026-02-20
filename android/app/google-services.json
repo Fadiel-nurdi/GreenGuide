@@ -1,0 +1,29 @@
+{
+  "project_info": {
+    "project_number": "311560887734",
+    "project_id": "green-guide-rekhutitera",
+    "storage_bucket": "green-guide-rekhutitera.firebasestorage.app"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:311560887734:android:8c91f606208b51ad877517",
+        "android_client_info": {
+          "package_name": "com.example.greenguide_app"
+        }
+      },
+      "oauth_client": [],
+      "api_key": [
+        {
+          "current_key": "AIzaSyBWhdpyaqejkV3z62wdE4kEY7dOOypDobs"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": []
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}

@@ -1,0 +1,63 @@
+{
+  "mangrove": [
+    {
+      "ecoId": "M-002",
+      "substrat": "PASIR",
+      "ecosystem": "Mangrove",
+      "referensi": "pdlr",
+      "ph_tanah": "Netral",
+      "rekomendasi_jenis": "iepe",
+      "salinitas": "3 - 16",
+      "jenis_ekosistem_mangrove": "Mangrove Minor",
+      "lokasi_pasang_surut": "Mangrove Tengah"
+    },
+    {
+      "ecoId": "M-001",
+      "substrat": "LUMPUR",
+      "ecosystem": "Mangrove",
+      "referensi": "jdod",
+      "ph_tanah": "Netral",
+      "rekomendasi_jenis": "eold",
+      "salinitas": "3 - 16",
+      "jenis_ekosistem_mangrove": "Mangrove Sejati / Mayor",
+      "lokasi_pasang_surut": "Mangrove Terbuka"
+    },
+    {
+      "ecoId": "M-003",
+      "substrat": "PASIR",
+      "ecosystem": "Mangrove",
+      "referensi": "vhj",
+      "ph_tanah": "Netral",
+      "rekomendasi_jenis": "sdf",
+      "salinitas": "3 - 16",
+      "jenis_ekosistem_mangrove": "Mangrove Minor",
+      "lokasi_pasang_surut": "Mangrove Tengah"
+    }
+  ],
+  "dataran_rendah": [
+    {
+      "suhu_udara": ">30",
+      "keterangan": "Semi-Toleran",
+      "ecosystem": "Dataran Rendah",
+      "referensi": "hu",
+      "ketinggian": "101 - 500",
+      "curah_hujan": "Tinggi 301 - 500",
+      "ecoId": "DR-003",
+      "intensitas_cahaya": "3000 - 6000",
+      "ph_tanah": "4.5 - 5.5 (Masam)",
+      "rekomendasi_jenis": "yuk"
+    },
+    {
+      "suhu_udara": "25.1 - 30",
+      "keterangan": "Semi-Toleran",
+      "ecosystem": "Dataran Rendah",
+      "referensi": "natasya kocak",
+      "ketinggian": "101 - 500",
+      "curah_hujan": "Menengah 101 - 300",
+      "ecoId": "DR-002",
+      "intensitas_cahaya": "3000 - 6000",
+      "ph_tanah": "4.5 - 5.5 (Masam)",
+      "rekomendasi_jenis": "kocak"
+    }
+  ]
+}
