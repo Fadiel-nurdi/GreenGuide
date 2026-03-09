@@ -197,10 +197,11 @@ class _FilterSheetState extends State<FilterSheet> {
                 const SizedBox(height: 12),
 
                 // ===== Ketinggian =====
+                // Baris 202 - Ketinggian
                 TextFormField(
                   controller: _altitudeC,
                   keyboardType: TextInputType.number,
-                  inputFormatters: const [FilteringTextInputFormatter.digitsOnly],
+                  inputFormatters: [FilteringTextInputFormatter.digitsOnly],
                   decoration: const InputDecoration(
                     labelText: 'Ketinggian (mdpl)',
                     border: OutlineInputBorder(),
@@ -211,10 +212,11 @@ class _FilterSheetState extends State<FilterSheet> {
                     final n = int.tryParse(t);
                     if (n == null) return 'Masukkan angka yang benar';
                     if (n < 0) return 'Tidak boleh negatif';
-                    if (n > 10000) return 'Terlalu besar'; // opsional
+                    if (n > 10000) return 'Terlalu besar';
                     return null;
                   },
                 ),
+
                 const SizedBox(height: 12),
 
                 // ===== pH =====
@@ -253,10 +255,11 @@ class _FilterSheetState extends State<FilterSheet> {
                 const SizedBox(height: 12),
 
                 // ===== Curah hujan =====
+                // Baris 258 - Curah Hujan
                 TextFormField(
                   controller: _rainfallC,
                   keyboardType: TextInputType.number,
-                  inputFormatters: const [FilteringTextInputFormatter.digitsOnly],
+                  inputFormatters: [FilteringTextInputFormatter.digitsOnly],
                   decoration: const InputDecoration(
                     labelText: 'Curah Hujan (mm/tahun)',
                     border: OutlineInputBorder(),
@@ -267,10 +270,11 @@ class _FilterSheetState extends State<FilterSheet> {
                     final n = int.tryParse(t);
                     if (n == null) return 'Masukkan angka yang benar';
                     if (n < 0) return 'Tidak boleh negatif';
-                    if (n > 100000) return 'Terlalu besar'; // opsional
+                    if (n > 100000) return 'Terlalu besar';
                     return null;
                   },
                 ),
+
                 const SizedBox(height: 16),
 
                 FilledButton.icon(

@@ -25,7 +25,6 @@ class NavScreen extends StatelessWidget {
         padding: EdgeInsets.zero,
         children: [
           // ================= HEADER =================
-          // ================= HEADER =================
           DrawerHeader(
             decoration: const BoxDecoration(
               image: DecorationImage(
@@ -37,12 +36,6 @@ class NavScreen extends StatelessWidget {
               alignment: Alignment.bottomLeft,
               child: Row(
                 children: [
-                  Image.asset(
-                    'assets/Images/Logo.png',
-                    width: 56,
-                    height: 56,
-                    fit: BoxFit.contain,
-                  ),
                   const SizedBox(width: 12),
                   const Text(
                     'Green Guide',

@@ -4,10 +4,7 @@ import 'package:flutter/material.dart';
 
 import 'admin_nav.dart';
 import 'admin_ecosystem_form_screen.dart';
-import 'admin_reference_form_screen.dart';
 import 'admin_activity_logger.dart';
-
-enum _AdminListMode { ecosystem, reference }
 
 class AdminEcosystemListScreen extends StatefulWidget {
   const AdminEcosystemListScreen({super.key});
@@ -21,10 +18,8 @@ class AdminEcosystemListScreen extends StatefulWidget {
 
 class _AdminEcosystemListScreenState
     extends State<AdminEcosystemListScreen> {
-  _AdminListMode _mode = _AdminListMode.ecosystem;
 
   final _ecoRef = FirebaseFirestore.instance.collection('ecosystems');
-  final _refRef = FirebaseFirestore.instance.collection('references');
 
   final _border =
   TableBorder.all(color: Colors.grey.shade400, width: 1);
@@ -205,23 +200,6 @@ class _AdminEcosystemListScreenState
     _showSuccess(context, 'Data berhasil dihapus');
   }
 
-
-  Future<void> _deleteReference(
-      BuildContext context, String docId) async {
-    final ok = await _confirm(context);
-    if (ok != true) return;
-
-    await _refRef.doc(docId).delete();
-
-    await AdminActivityLogger.log(
-      action: 'delete',
-      ecoId: 'REF',
-      ecosystem: 'Daftar Pustaka',
-    );
-    if (!mounted) return;
-    _showSuccess(context, 'Daftar pustaka berhasil dihapus');
-  }
-
   // ================= UI =================
   @override
   Widget build(BuildContext context) {
@@ -241,27 +219,8 @@ class _AdminEcosystemListScreenState
         return Scaffold(
           drawer: const AdminNav(),
           appBar: AppBar(
-            title: const Text('Data Master'),
+            title: const Text('Kelola Ekosistem'),
             backgroundColor: Colors.green[700],
-            bottom: PreferredSize(
-              preferredSize: const Size.fromHeight(48),
-              child: Row(
-                children: [
-                  _tab(
-                    label: 'Ekosistem',
-                    active: _mode == _AdminListMode.ecosystem,
-                    onTap: () =>
-                        setState(() => _mode = _AdminListMode.ecosystem),
-                  ),
-                  _tab(
-                    label: 'Daftar Pustaka',
-                    active: _mode == _AdminListMode.reference,
-                    onTap: () =>
-                        setState(() => _mode = _AdminListMode.reference),
-                  ),
-                ],
-              ),
-            ),
           ),
           floatingActionButton: FloatingActionButton(
             backgroundColor: Colors.green[700],
@@ -269,50 +228,13 @@ class _AdminEcosystemListScreenState
             onPressed: () {
               Navigator.pushNamed(
                 context,
-                _mode == _AdminListMode.ecosystem
-                    ? AdminEcosystemFormScreen.routeName
-                    : AdminReferenceFormScreen.routeName,
+                AdminEcosystemFormScreen.routeName,
               );
             },
           ),
-          body: _mode == _AdminListMode.ecosystem
-              ? _buildEcosystemList()
-              : _buildReferenceList(),
+          body: _buildEcosystemList(),
         );
       },
-    );
-  }
-
-  Widget _tab({
-    required String label,
-    required bool active,
-    required VoidCallback onTap,
-  }) {
-    return Expanded(
-      child: InkWell(
-        onTap: onTap,
-        child: Container(
-          height: 48,
-          alignment: Alignment.center,
-          decoration: BoxDecoration(
-            border: Border(
-              bottom: BorderSide(
-                width: 3,
-                color:
-                active ? Colors.white : Colors.transparent,
-              ),
-            ),
-          ),
-          child: Text(
-            label,
-            style: TextStyle(
-              color: Colors.white,
-              fontWeight:
-              active ? FontWeight.bold : FontWeight.normal,
-            ),
-          ),
-        ),
-      ),
     );
   }
 
@@ -407,109 +329,6 @@ class _AdminEcosystemListScreenState
         );
       },
     );
-  }
-
-  // ================= REFERENCE LIST =================
-  Widget _buildReferenceList() {
-    return StreamBuilder<QuerySnapshot<Map<String, dynamic>>>(
-      stream: _refRef.orderBy('ecosystem').snapshots(),
-      builder: (context, snap) {
-        if (!snap.hasData) {
-          return const Center(child: CircularProgressIndicator());
-        }
-
-        final docs = snap.data!.docs;
-        if (docs.isEmpty) {
-          return const Center(child: Text('Belum ada daftar pustaka'));
-        }
-
-        // ================= GROUP BY ECOSYSTEM =================
-        final Map<String, List<QueryDocumentSnapshot<Map<String, dynamic>>>> grouped = {};
-
-        for (final d in docs) {
-          final eco = d.data()['ecosystem'] ?? 'Tidak diketahui';
-          grouped.putIfAbsent(eco, () => []);
-          grouped[eco]!.add(d);
-        }
-
-        return ListView(
-          padding: const EdgeInsets.fromLTRB(16, 16, 16, 100),
-          children: grouped.entries.map((entry) {
-            final ecoName = entry.key;
-            final items = entry.value;
-
-            return Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                // ================= JUDUL EKOSISTEM =================
-                Padding(
-                  padding: const EdgeInsets.only(top: 16, bottom: 8),
-                  child: Text(
-                    _prettyEcoName(ecoName),
-                    style: const TextStyle(
-                      fontSize: 16,
-                      fontWeight: FontWeight.bold,
-                    ),
-                  ),
-                ),
-
-                // ================= LIST CARD =================
-                ...items.map((d) {
-                  final data = d.data();
-                  return Card(
-                    child: ListTile(
-                      title: Text(data['citation'] ?? '-'),
-                      subtitle: Text(
-                        _buildReferenceMeta(data),
-                        style: const TextStyle(fontSize: 12),
-                      ),
-                      trailing: Row(
-                        mainAxisSize: MainAxisSize.min,
-                        children: [
-                          IconButton(
-                            icon: const Icon(Icons.edit, color: Colors.orange),
-                            onPressed: () {
-                              Navigator.pushNamed(
-                                context,
-                                AdminReferenceFormScreen.routeName,
-                                arguments: d.id,
-                              );
-                            },
-                          ),
-                          IconButton(
-                            icon: const Icon(Icons.delete, color: Colors.red),
-                            onPressed: () =>
-                                _deleteReference(context, d.id),
-                          ),
-                        ],
-                      ),
-                    ),
-                  );
-                }).toList(),
-              ],
-            );
-          }).toList(),
-        );
-      },
-    );
-  }
-
-  String _prettyEcoName(String raw) {
-    final v = raw.toLowerCase().trim();
-    if (v == 'mangrove') return 'Ekosistem Mangrove';
-    if (v == 'dataran rendah') return 'Ekosistem Dataran Rendah';
-    if (v == 'global') return 'Referensi Umum';
-    return raw;
-  }
-
-  String _buildReferenceMeta(Map<String, dynamic> data) {
-    final year = data['year'];
-    final active = data['isActive'] == true ? 'Aktif' : 'Nonaktif';
-
-    if (year != null && year.toString().isNotEmpty) {
-      return 'Tahun: $year • Status: $active';
-    }
-    return 'Status: $active';
   }
 
 

@@ -20,6 +20,7 @@ import 'admin/admin_ecosystem_list_screen.dart';
 import 'admin/admin_ecosystem_form_screen.dart';
 import 'admin/admin_activity_screen.dart';
 import 'admin/admin_reference_form_screen.dart';
+import 'admin/admin_reference_list_screen.dart';
 import 'admin/admin_suggestions_screen.dart';
 
 // ================= SUPER ADMIN SCREENS =================
@@ -114,6 +115,10 @@ Route<dynamic> onGenerateRoute(RouteSettings settings) {
 
     case AdminEcosystemListScreen.routeName:
       page = const AdminEcosystemListScreen();
+      break;
+
+    case AdminReferenceListScreen.routeName:
+      page = const AdminReferenceListScreen();
       break;
 
     case AdminEcosystemFormScreen.routeName:

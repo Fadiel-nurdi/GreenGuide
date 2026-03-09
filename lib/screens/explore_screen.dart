@@ -76,9 +76,9 @@ class ExploreScreen extends StatelessWidget {
               SizedBox(height: 12),
               _TeacherCard(),
               SizedBox(height: 24),
-              _GoalsAndBenefitsSection(),
-              SizedBox(height: 24),
               _StepsSection(),
+              SizedBox(height: 24),
+              _GoalsAndBenefitsSection(),
               SizedBox(height: 24),
               _ContactSection(),
               SizedBox(height: 16),
@@ -184,8 +184,8 @@ class _GoalsAndBenefitsSection extends StatelessWidget {
         decoration: const BoxDecoration(
           gradient: LinearGradient(
             colors: [
-              Color(0xFF6A8D55),
-              Color(0xFF8FB07A),
+              Color(0xFFB8D9A8),
+              Color(0xFFC8E6B8),
             ],
             begin: Alignment.topLeft,
             end: Alignment.bottomRight,
@@ -199,8 +199,8 @@ class _GoalsAndBenefitsSection extends StatelessWidget {
             Text(
               'Tujuan dan\nKeuntungan',
               style: theme.textTheme.titleLarge?.copyWith(
-                color: Colors.white,
-                fontWeight: FontWeight.w800,
+                color: const Color(0xFF2D5016),
+                fontWeight: FontWeight.w900,
                 height: 1.15,
               ),
             ),
@@ -209,7 +209,8 @@ class _GoalsAndBenefitsSection extends StatelessWidget {
               'Green Guide membantu petani, siswa, dan pemerhati lingkungan '
                   'untuk memilih tanaman yang sesuai dengan karakteristik lahan.',
               style: theme.textTheme.bodySmall?.copyWith(
-                color: Colors.white.withOpacity(0.9),
+                color: const Color(0xFF3D6B22),
+                fontWeight: FontWeight.w600,
                 height: 1.35,
               ),
             ),
@@ -222,7 +223,7 @@ class _GoalsAndBenefitsSection extends StatelessWidget {
               padding:
               const EdgeInsets.symmetric(horizontal: 14, vertical: 14),
               decoration: BoxDecoration(
-                color: Colors.black.withOpacity(0.45),
+                color: const Color(0xFF7BA557).withOpacity(0.6),
                 borderRadius: BorderRadius.circular(18),
               ),
               child: Text(
@@ -232,6 +233,7 @@ class _GoalsAndBenefitsSection extends StatelessWidget {
                     '• Menjadi bahan ajar praktikum informatika dan geografi.',
                 style: theme.textTheme.bodySmall?.copyWith(
                   color: Colors.white.withOpacity(0.95),
+                  fontWeight: FontWeight.w700,
                   height: 1.3,
                 ),
               ),
@@ -246,7 +248,7 @@ class _GoalsAndBenefitsSection extends StatelessWidget {
               padding:
               const EdgeInsets.symmetric(horizontal: 14, vertical: 14),
               decoration: BoxDecoration(
-                color: Colors.white,
+                color: Colors.white.withOpacity(0.85),
                 borderRadius: BorderRadius.circular(18),
               ),
               child: Text(
@@ -255,6 +257,8 @@ class _GoalsAndBenefitsSection extends StatelessWidget {
                     '• Menggunakan data ekosistem yang jelas.\n'
                     '• Dapat digunakan di kelas maupun di lapangan.',
                 style: theme.textTheme.bodySmall?.copyWith(
+                  color: const Color(0xFF3D6B22),
+                  fontWeight: FontWeight.w700,
                   height: 1.3,
                 ),
               ),
@@ -396,8 +400,7 @@ class _ContactSection extends StatelessWidget {
             ],
           ),
 
-          const SizedBox(height: 8),
-
+          const SizedBox(height: 12),
 
           Text(
             'Green Guide merupakan aplikasi edukatif berbasis sistem rekomendasi '
@@ -407,7 +410,11 @@ class _ContactSection extends StatelessWidget {
                 'Aplikasi ini dikembangkan oleh Fadiel Nurdiansyah, mahasiswa Program Studi '
                 'Teknik Informatika, dengan dukungan data dari Yongki Saputra dan '
                 'Awalinda Riski Aina, mahasiswa Program Studi Rekayasa Kehutanan.',
-            style: theme.textTheme.bodySmall?.copyWith(height: 1.4),
+            textAlign: TextAlign.justify,
+            style: theme.textTheme.bodySmall?.copyWith(
+              height: 1.5,
+              color: Colors.black87,
+            ),
           ),
           const SizedBox(height: 12),
 
@@ -419,7 +426,7 @@ class _ContactSection extends StatelessWidget {
             children: [
               const Icon(Icons.email_outlined, size: 16),
               SelectableText(
-                'greenguide@app.com',
+                'rekayasa.kehutanan@itera.ac.id',
                 style: theme.textTheme.bodySmall,
               ),
             ],

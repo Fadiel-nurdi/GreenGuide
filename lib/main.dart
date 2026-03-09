@@ -6,7 +6,6 @@ import 'package:cloud_firestore/cloud_firestore.dart';
 import 'firebase_options.dart';
 import 'theme.dart';
 import 'app_router.dart';
-import 'services/presence_service.dart';
 
 Future<void> main() async {
   WidgetsFlutterBinding.ensureInitialized();
@@ -21,8 +20,6 @@ Future<void> main() async {
     persistenceEnabled: true,
   );
 
-  // ✅ Presence (ONLINE / OFFLINE)
-  PresenceService.init();
 
   runApp(
     const ProviderScope(

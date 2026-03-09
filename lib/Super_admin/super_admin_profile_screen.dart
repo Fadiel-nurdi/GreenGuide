@@ -90,7 +90,22 @@ class _SuperAdminProfileScreenState extends State<SuperAdminProfileScreen> {
     );
 
     if (cropped != null && mounted) {
-      setState(() => _pickedImage = cropped);
+      // Evict previous image caches to ensure UI shows new image immediately
+      try {
+        if (_pickedImage != null) {
+          await FileImage(_pickedImage!).evict();
+        }
+        if (_photoUrl != null && _photoUrl!.isNotEmpty) {
+          await NetworkImage(_photoUrl!).evict();
+        }
+      } catch (e) {
+        debugPrint('Evict cache error: $e');
+      }
+
+      setState(() {
+        _pickedImage = cropped;
+        debugPrint('Picked cropped file path: ${cropped.path}');
+      });
     }
   }
 
@@ -100,7 +115,14 @@ class _SuperAdminProfileScreenState extends State<SuperAdminProfileScreen> {
     final ref =
     FirebaseStorage.instance.ref('admin_profiles/${_user!.uid}.png');
     await ref.putFile(_pickedImage!);
-    return ref.getDownloadURL();
+    final url = await ref.getDownloadURL();
+    // evict network cache for new url
+    try {
+      await NetworkImage(url).evict();
+    } catch (e) {
+      debugPrint('Evict new network image failed: $e');
+    }
+    return url;
   }
 
   // ================= SAVE PROFILE =================
@@ -125,8 +147,23 @@ class _SuperAdminProfileScreenState extends State<SuperAdminProfileScreen> {
         'updatedAt': FieldValue.serverTimestamp(),
       });
 
+      // update local state and evict previous network image so fresh one shows
+      try {
+        if (newPhoto != null && newPhoto.isNotEmpty) {
+          await NetworkImage(newPhoto).evict();
+        }
+      } catch (e) {
+        debugPrint('Evict after save failed: $e');
+      }
+
+      setState(() {
+        _photoUrl = newPhoto;
+        _pickedImage = null; // reset picked image after upload
+      });
+
       _showSnack('Profil berhasil diperbarui');
-    } catch (_) {
+    } catch (e) {
+      debugPrint('Save profile error: $e');
       _showSnack('Gagal menyimpan perubahan');
     } finally {
       if (mounted) setState(() => _saving = false);

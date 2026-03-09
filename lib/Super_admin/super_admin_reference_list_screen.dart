@@ -46,40 +46,71 @@ class SuperAdminReferenceListScreen extends StatelessWidget {
           }
 
           final docs = snap.data!.docs;
-          if (docs.isEmpty) {
-            return const Center(
-              child: Text('Belum ada daftar pustaka'),
-            );
+
+// 🔥 KELOMPOKKAN BERDASARKAN ECOSYSTEM
+          final Map<String, List<QueryDocumentSnapshot<Map<String, dynamic>>>> grouped = {};
+
+          for (var doc in docs) {
+            final eco = doc.data()['ecosystem'] ?? 'Lainnya';
+            grouped.putIfAbsent(eco, () => []);
+            grouped[eco]!.add(doc);
           }
 
-          return ListView.builder(
-            padding: const EdgeInsets.all(16),
-            itemCount: docs.length,
-            itemBuilder: (_, i) {
-              final data = docs[i].data();
+          return ListView(
+            padding: EdgeInsets.fromLTRB(
+              16,
+              16,
+              16,
+              MediaQuery.of(context).padding.bottom + 24,
+            ),
+            children: grouped.entries.map((entry) {
+              final ecosystemName = entry.key;
+              final items = entry.value;
 
-              return Card(
-                elevation: 2,
-                margin: const EdgeInsets.only(bottom: 12),
-                child: ListTile(
-                  title: Text(
-                    data['citation'] ?? '-',
+              return Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  const SizedBox(height: 12),
+
+                  // 🔹 JUDUL EKOSISTEM
+                  Text(
+                    ecosystemName,
                     style: const TextStyle(
-                      fontWeight: FontWeight.w600,
+                      fontSize: 16,
+                      fontWeight: FontWeight.bold,
                     ),
                   ),
-                  subtitle: Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      const SizedBox(height: 6),
-                      Text('Kategori: ${data['ecosystem'] ?? '-'}'),
-                      if (data['year'] != null)
-                        Text('Tahun: ${data['year']}'),
-                    ],
-                  ),
-                ),
+
+                  const SizedBox(height: 8),
+
+                  ...items.map((doc) {
+                    final data = doc.data();
+
+                    return Card(
+                      elevation: 2,
+                      margin: const EdgeInsets.only(bottom: 12),
+                      child: ListTile(
+                        title: Text(
+                          data['citation'] ?? '-',
+                          style: const TextStyle(
+                            fontWeight: FontWeight.w600,
+                          ),
+                        ),
+                        subtitle: Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                            const SizedBox(height: 6),
+                            Text('Kategori: ${data['ecosystem'] ?? '-'}'),
+                            if (data['year'] != null)
+                              Text('Tahun: ${data['year']}'),
+                          ],
+                        ),
+                      ),
+                    );
+                  }).toList(),
+                ],
               );
-            },
+            }).toList(),
           );
         },
       ),

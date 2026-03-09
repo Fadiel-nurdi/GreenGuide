@@ -168,6 +168,7 @@ class _EcosystemSection extends StatelessWidget {
           const SizedBox(height: 10),
           SelectableText(
             description,
+            textAlign: TextAlign.justify,
             style: theme.textTheme.bodySmall?.copyWith(
               height: 1.4,
               color: Colors.black87,
@@ -229,8 +230,7 @@ class _AboutFooter extends StatelessWidget {
             ],
           ),
 
-          const SizedBox(height: 8),
-
+          const SizedBox(height: 12),
 
           Text(
             'Green Guide merupakan aplikasi edukatif berbasis sistem rekomendasi '
@@ -240,7 +240,11 @@ class _AboutFooter extends StatelessWidget {
                 'Aplikasi ini dikembangkan oleh Fadiel Nurdiansyah, mahasiswa Program Studi '
                 'Teknik Informatika, dengan dukungan data dari Yongki Saputra dan '
                 'Awalinda Riski Aina, mahasiswa Program Studi Rekayasa Kehutanan.',
-            style: theme.textTheme.bodySmall?.copyWith(height: 1.4),
+            textAlign: TextAlign.justify,
+            style: theme.textTheme.bodySmall?.copyWith(
+              height: 1.5,
+              color: Colors.black87,
+            ),
           ),
           const SizedBox(height: 12),
 
@@ -252,7 +256,7 @@ class _AboutFooter extends StatelessWidget {
             children: [
               const Icon(Icons.email_outlined, size: 16),
               SelectableText(
-                'greenguide@app.com',
+                'rekayasa.kehutanan@itera.ac.id',
                 style: theme.textTheme.bodySmall,
               ),
             ],

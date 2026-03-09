@@ -28,6 +28,7 @@ class _AdminProfileScreenState extends State<AdminProfileScreen> {
 
   String? _photoUrl;
   File? _pickedImage;
+  bool _docExists = false; // track if admins/{uid} exists
 
   User? get _user => FirebaseAuth.instance.currentUser;
 
@@ -49,10 +50,11 @@ class _AdminProfileScreenState extends State<AdminProfileScreen> {
     final user = _user;
     if (user == null) return;
 
-    final doc = await FirebaseFirestore.instance
+    final docRef = FirebaseFirestore.instance
         .collection('admins')
-        .doc(user.uid)
-        .get();
+        .doc(user.uid);
+
+    final doc = await docRef.get();
 
     final data = doc.data() ?? {};
 
@@ -61,6 +63,7 @@ class _AdminProfileScreenState extends State<AdminProfileScreen> {
       _nameC.text = data['name'] ?? '';
       _emailC.text = user.email ?? '';
       _photoUrl = (data['photoUrl'] as String?)?.trim();
+      _docExists = doc.exists;
       _loading = false;
     });
   }
@@ -89,17 +92,47 @@ class _AdminProfileScreenState extends State<AdminProfileScreen> {
     );
 
     if (cropped != null && mounted) {
-      setState(() => _pickedImage = cropped);
+      // Evict previous image caches to ensure UI shows new image immediately
+      try {
+        if (_pickedImage != null) {
+          await FileImage(_pickedImage!).evict();
+        }
+        if (_photoUrl != null && _photoUrl!.isNotEmpty) {
+          await NetworkImage(_photoUrl!).evict();
+        }
+      } catch (e) {
+        debugPrint('Evict cache error: $e');
+      }
+
+      setState(() {
+        _pickedImage = cropped;
+        debugPrint('Picked cropped file path: ${cropped.path}');
+      });
     }
   }
 
   Future<String?> _uploadPhoto() async {
     if (_pickedImage == null || _user == null) return null;
 
-    final ref =
-    FirebaseStorage.instance.ref('admin_profiles/${_user!.uid}.png');
-    await ref.putFile(_pickedImage!);
-    return ref.getDownloadURL();
+    try {
+      final ref = FirebaseStorage.instance.ref('admin_profiles/${_user!.uid}.png');
+      final metadata = SettableMetadata(contentType: 'image/png');
+      final uploadTask = ref.putFile(_pickedImage!, metadata);
+      final snapshot = await uploadTask;
+      if (snapshot.state != TaskState.success) {
+        throw Exception('Upload gagal: ${snapshot.state}');
+      }
+      final url = await ref.getDownloadURL();
+      try {
+        await NetworkImage(url).evict();
+      } catch (e) {
+        debugPrint('Evict new network image failed: $e');
+      }
+      return url;
+    } catch (e) {
+      debugPrint('Upload photo error: $e');
+      rethrow;
+    }
   }
 
   // ================= SAVE PROFILE =================
@@ -107,6 +140,12 @@ class _AdminProfileScreenState extends State<AdminProfileScreen> {
     if (!_formKey.currentState!.validate()) return;
     final user = _user;
     if (user == null) return;
+
+    if (!_docExists) {
+      // Security rules may disallow create by admin; better to inform user to contact super admin.
+      _showSnack('Akun admin belum terdaftar di server. Minta super admin menambahkan akun Anda agar perubahan bisa disimpan.');
+      return;
+    }
 
     setState(() => _saving = true);
     try {
@@ -124,9 +163,16 @@ class _AdminProfileScreenState extends State<AdminProfileScreen> {
         'updatedAt': FieldValue.serverTimestamp(),
       });
 
+      // update local state
+      setState(() {
+        _photoUrl = newPhoto;
+        _pickedImage = null;
+      });
+
       _showSnack('Profil berhasil diperbarui');
-    } catch (_) {
-      _showSnack('Gagal menyimpan perubahan');
+    } catch (e) {
+      debugPrint('Save profile error: $e');
+      _showSnack('Gagal menyimpan perubahan: ${e.toString()}');
     } finally {
       if (mounted) setState(() => _saving = false);
     }

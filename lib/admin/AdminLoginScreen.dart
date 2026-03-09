@@ -60,105 +60,23 @@ class _AdminLoginScreenState extends State<AdminLoginScreen> {
 
       final data = adminSnap.data() as Map<String, dynamic>;
 
-// 🔥 CEK SUDAH ONLINE DI DEVICE LAIN BELUM
-      // Support both 'isOnline' and legacy 'isonline' keys.
-      final bool alreadyOnline =
-          ((data['isOnline'] is bool && data['isOnline'] == true) ||
-              (data['isonline'] is bool && data['isonline'] == true));
-
-      // Prefer 'lastSeen', fall back to 'lastOnline' for older records.
-      final Timestamp? lastSeenTsRaw =
-          (data['lastSeen'] is Timestamp)
-              ? data['lastSeen'] as Timestamp
-              : (data['lastOnline'] is Timestamp ? data['lastOnline'] as Timestamp : null);
-
-      bool sessionMasihAktif = false;
-
-      // Conservative rule:
-      // - Only consider a session active if we have a timestamp (lastSeen/lastOnline)
-      //   and it's recent (within 5 minutes).
-      // - Legacy flags without timestamps should NOT cause a popup.
-      try {
-        final now = DateTime.now();
-        if (lastSeenTsRaw != null) {
-          final lastSeen = lastSeenTsRaw.toDate();
-          final diffMinutes = now.difference(lastSeen).inMinutes;
-          if (diffMinutes < 5) sessionMasihAktif = true;
-        } else {
-          // No timestamp → do not treat as active
-          sessionMasihAktif = false;
-        }
-
-        // If lastAction indicates a recent explicit logout, prefer that and
-        // treat as not active (avoid race when logout/write occurs just now).
-        final lastAction = data['lastAction']?.toString();
-        final Timestamp? lastActionAtTs = data['lastActionAt'] is Timestamp ? data['lastActionAt'] as Timestamp : null;
-        if (lastAction != null && lastAction == 'logout' && lastActionAtTs != null) {
-          final lastActionAt = lastActionAtTs.toDate();
-          final diffSeconds = now.difference(lastActionAt).inSeconds;
-          if (diffSeconds < 120) {
-            sessionMasihAktif = false;
-          }
-        }
-      } catch (e) {
-        print('Session detection error: $e');
-      }
-
-      // Debug: log session detection decision with more details
-      print('AdminLogin: isOnline=${data['isOnline']}, isonline=${data['isonline']}, lastSeen=${lastSeenTsRaw?.toDate()}, lastAction=${data['lastAction']}, sessionMasihAktif=$sessionMasihAktif');
-
-      // Double-check: re-fetch document to avoid races (logout might have just updated it)
-      if (sessionMasihAktif) {
-        try {
-          final fresh = await adminRef.get();
-          final freshData = (fresh.data() ?? {}) as Map<String, dynamic>;
-          final Timestamp? freshLastSeen = (freshData['lastSeen'] is Timestamp)
-              ? freshData['lastSeen'] as Timestamp
-              : (freshData['lastOnline'] is Timestamp ? freshData['lastOnline'] as Timestamp : null);
-          bool freshActive = false;
-          if (freshLastSeen != null) {
-            final now = DateTime.now();
-            final diffMinutes = now.difference(freshLastSeen.toDate()).inMinutes;
-            if (diffMinutes < 5) freshActive = true;
-          }
-          final freshLastAction = freshData['lastAction']?.toString();
-          final Timestamp? freshLastActionAtTs = freshData['lastActionAt'] is Timestamp ? freshData['lastActionAt'] as Timestamp : null;
-          if (freshLastAction != null && freshLastAction == 'logout' && freshLastActionAtTs != null) {
-            final diffSeconds = DateTime.now().difference(freshLastActionAtTs.toDate()).inSeconds;
-            if (diffSeconds < 120) {
-              freshActive = false;
-            }
-          }
-
-          print('AdminLogin(fresh): isOnline=${freshData['isOnline']}, isonline=${freshData['isonline']}, lastSeen=${freshLastSeen?.toDate()}, lastAction=${freshData['lastAction']}, freshActive=$freshActive');
-
-          if (!freshActive) {
-            // Another process updated the doc (likely logout). Skip the popup.
-            sessionMasihAktif = false;
-          }
-        } catch (e) {
-          print('Failed to refresh admin doc: $e');
-        }
-      }
-
-      if (sessionMasihAktif) {
-        // Instead of blocking immediately, allow user to force login.
-        // This helps when previous session didn't clear isOnline on logout.
+      // ================= CEK 1 DEVICE =================
+      if (data['isOnline'] == true) {
         final force = await showDialog<bool>(
           context: context,
           barrierDismissible: false,
           builder: (ctx) => AlertDialog(
             title: const Text('Sesi Aktif Ditemukan'),
             content: const Text(
-              'Akun ini tampak sedang digunakan pada perangkat lain. Anda dapat memaksa login untuk mengakhiri sesi lain. Lanjutkan?',
+              'Akun sedang digunakan di perangkat lain. Paksa login?',
             ),
             actions: [
               TextButton(
-                onPressed: () => Navigator.of(ctx).pop(false),
+                onPressed: () => Navigator.pop(ctx, false),
                 child: const Text('Batal'),
               ),
               FilledButton(
-                onPressed: () => Navigator.of(ctx).pop(true),
+                onPressed: () => Navigator.pop(ctx, true),
                 child: const Text('Paksa Login'),
               ),
             ],
@@ -166,26 +84,8 @@ class _AdminLoginScreenState extends State<AdminLoginScreen> {
         );
 
         if (force != true) {
-          // User chose not to force login — sign out and show message
           await FirebaseAuth.instance.signOut();
           setState(() => _error = 'Akun sedang digunakan di perangkat lain');
-          return;
-        }
-
-        // User chose to force login — update admin doc to claim session
-        try {
-          // Update both key variants and timestamps for compatibility.
-          await adminRef.update({
-            'isOnline': true,
-            'isonline': true,
-            'lastOnline': FieldValue.serverTimestamp(),
-            'lastSeen': FieldValue.serverTimestamp(),
-            'forcedLoginAt': FieldValue.serverTimestamp(),
-          });
-        } catch (e) {
-          // If update failed, be defensive: sign out and show error
-          await FirebaseAuth.instance.signOut();
-          setState(() => _error = 'Gagal memaksa login: ${e.toString()}');
           return;
         }
       }
@@ -204,9 +104,7 @@ class _AdminLoginScreenState extends State<AdminLoginScreen> {
       // Mark user online (write both key names and timestamps)
       await adminRef.update({
         'isOnline': true,
-        'isonline': true,
         'lastOnline': FieldValue.serverTimestamp(),
-        'lastSeen': FieldValue.serverTimestamp(),
       });
 
       // ================= ROLE =================

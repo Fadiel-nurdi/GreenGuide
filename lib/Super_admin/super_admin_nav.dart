@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
+import 'package:greenguide_app/Super_admin/super_admin_suggestions_screen.dart';
 
 import 'super_admin_home_screen.dart';
 import 'super_admin_profile_screen.dart';
@@ -49,7 +50,12 @@ class SuperAdminNav extends StatelessWidget {
         children: [
           // ================= HEADER =================
           UserAccountsDrawerHeader(
-            decoration: const BoxDecoration(color: Colors.green),
+            decoration: const BoxDecoration(
+              image: DecorationImage(
+                image: AssetImage('assets/Images/kocak.jpg'),
+                fit: BoxFit.cover,
+              ),
+            ),
             accountName: const Text(
               'Super Admin GreenGuide',
               style: TextStyle(fontWeight: FontWeight.bold),
@@ -57,10 +63,6 @@ class SuperAdminNav extends StatelessWidget {
             accountEmail: Text(email),
             currentAccountPicture: CircleAvatar(
               backgroundColor: Colors.transparent,
-              child: Image.asset(
-                'assets/Images/Logo.png',
-                fit: BoxFit.contain,
-              ),
             ),
           ),
 
@@ -130,7 +132,7 @@ class SuperAdminNav extends StatelessWidget {
           ListTile(
             leading: const Icon(Icons.feedback),
             title: const Text('Saran & Masukan'),
-            onTap: () => _go(context, '/suggestions'),
+            onTap: () => _go(context, SuperAdminSuggestionsScreen.routeName,),
           ),
 
           // ================= KELOLA ADMIN =================

@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import '../models/data_record.dart';
 import '../services/data_service.dart';
 import '../services/filter_engine.dart';
 
@@ -8,7 +9,6 @@ class CascadingForm extends StatefulWidget {
   final List<String> fieldOrder;
   final Map<String, String> fieldLabels;
   final String recommendationKey;
-  final String referenceKey;
 
   const CascadingForm({
     Key? key,
@@ -17,7 +17,6 @@ class CascadingForm extends StatefulWidget {
     required this.fieldOrder,
     required this.fieldLabels,
     required this.recommendationKey,
-    required this.referenceKey,
   }) : super(key: key);
 
   @override
@@ -28,7 +27,6 @@ class _CascadingFormState extends State<CascadingForm> {
   final Map<String, String?> _values = {};
   Map<String, List<String>> _options = {};
   List<String> _recommendations = [];
-  List<String> _references = [];
 
   late FilterEngine _engine;
 
@@ -53,7 +51,6 @@ class _CascadingFormState extends State<CascadingForm> {
     setState(() {
       _values.clear();
       _recommendations.clear();
-      _references.clear();
       _options = _engine.optionsFor(
         ecosystem: widget.ecosystem,
         answeredFilters: {},
@@ -99,13 +96,10 @@ class _CascadingFormState extends State<CascadingForm> {
           ecosystem: widget.ecosystem,
           answers: _values,
           recommendationKey: widget.recommendationKey,
-          referenceKey: widget.referenceKey,
         );
         _recommendations = res.recommendations;
-        _references = res.references;
       } else {
         _recommendations.clear();
-        _references.clear();
       }
     });
   }
@@ -178,15 +172,6 @@ class _CascadingFormState extends State<CascadingForm> {
 
         if (_recommendations.isNotEmpty)
           ..._recommendations.map((r) => Text('- $r')),
-
-        if (_references.isNotEmpty) ...[
-          const SizedBox(height: 8),
-          const Text(
-            'Referensi',
-            style: TextStyle(fontWeight: FontWeight.bold),
-          ),
-          ..._references.map((r) => Text('- $r')),
-        ],
       ],
     );
   }

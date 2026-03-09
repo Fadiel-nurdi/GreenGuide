@@ -155,10 +155,10 @@ class _HeroSection extends StatelessWidget {
                         ),
                         const SizedBox(height: 6),
                         Text(
-                          'Aplikasi rekomendasi tanaman\nberdasarkan ekosistem lahan,\njenis tanah, ketinggian, pH,\ndan curah hujan.',
+                          'Aplikasi rekomendasi tanaman berdasarkan ekosistem lahan, jenis tanah, ketinggian, pH, dan curah hujan.\n\nSilahkan klik "PANDUAN" untuk penggunaan aplikasi.',
                           style: theme.textTheme.bodySmall?.copyWith(
                             color: Colors.white,
-                            height: 1.35,
+                            height: 1.4,
                           ),
                         ),
                         const SizedBox(height: 14),
@@ -300,11 +300,9 @@ class _HeroSection extends StatelessWidget {
                 const SizedBox(width: 16),
                 Expanded(
                   child: Text(
-                    'Temukan tanaman yang cocok untuk\n'
-                        'lahan secara cepat dan akurat\n'
-                        'berdasarkan data ekosistem.',
+                    'Temukan tanaman yang cocok untuk lahan secara cepat dan akurat berdasarkan data ekosistem.',
                     style: theme.textTheme.bodyMedium?.copyWith(
-                      height: 1.35,
+                      height: 1.4,
                       color: Colors.black,
                     ),
                   ),
@@ -654,8 +652,7 @@ class _ContactSection extends StatelessWidget {
             ],
           ),
 
-          const SizedBox(height: 8),
-
+          const SizedBox(height: 12),
 
           Text(
             'Green Guide merupakan aplikasi edukatif berbasis sistem rekomendasi '
@@ -665,7 +662,11 @@ class _ContactSection extends StatelessWidget {
                 'Aplikasi ini dikembangkan oleh Fadiel Nurdiansyah, mahasiswa Program Studi '
                 'Teknik Informatika, dengan dukungan data dari Yongki Saputra dan '
                 'Awalinda Riski Aina, mahasiswa Program Studi Rekayasa Kehutanan.',
-            style: theme.textTheme.bodySmall?.copyWith(height: 1.4),
+            textAlign: TextAlign.justify,
+            style: theme.textTheme.bodySmall?.copyWith(
+              height: 1.5,
+              color: Colors.black87,
+            ),
           ),
           const SizedBox(height: 12),
 
@@ -677,7 +678,7 @@ class _ContactSection extends StatelessWidget {
             children: [
               const Icon(Icons.email_outlined, size: 16),
               SelectableText(
-                'greenguide@app.com',
+                'rekayasa.kehutanan@itera.ac.id',
                 style: theme.textTheme.bodySmall,
               ),
             ],

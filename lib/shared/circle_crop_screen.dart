@@ -3,8 +3,10 @@ import 'dart:math';
 import 'dart:typed_data';
 
 import 'package:flutter/material.dart';
+import 'package:flutter/rendering.dart';
 import 'package:image/image.dart' as img;
 import 'package:path_provider/path_provider.dart';
+import 'dart:ui' as ui;
 
 class CircleCropScreen extends StatefulWidget {
   final File imageFile;
@@ -14,7 +16,7 @@ class CircleCropScreen extends StatefulWidget {
   @override
   State<CircleCropScreen> createState() => _CircleCropScreenState();
 }
-
+final GlobalKey _previewKey = GlobalKey();
 class _CircleCropScreenState extends State<CircleCropScreen> {
   final TransformationController _controller = TransformationController();
 
@@ -47,60 +49,127 @@ class _CircleCropScreenState extends State<CircleCropScreen> {
   }
 
   // ================= SAVE CROP =================
+
   Future<void> _save() async {
-    final matrix = _controller.value;
+    try {
+      // Try to capture the exact rendered preview using RepaintBoundary. This ensures the
+      // saved PNG visually matches what the user sees (including pan/zoom/rotation and clipping).
+      final boundaryContext = _previewKey.currentContext;
+      if (boundaryContext == null) {
+        debugPrint('Preview key context is null, falling back to programmatic crop');
+        await _saveProgrammaticFallback();
+        return;
+      }
 
-    final scale = matrix.getMaxScaleOnAxis();
-    final translate = matrix.getTranslation();
+      final renderObject = boundaryContext.findRenderObject();
+      if (renderObject == null || renderObject is! RenderRepaintBoundary) {
+        debugPrint('RenderObject is not a RenderRepaintBoundary, falling back');
+        await _saveProgrammaticFallback();
+        return;
+      }
 
-    final size = min(_originImage.width, _originImage.height);
+      final RenderRepaintBoundary boundary = renderObject as RenderRepaintBoundary;
 
-    final centerX = _originImage.width / 2;
-    final centerY = _originImage.height / 2;
+      // Increase pixelRatio for better quality output
+      final pixelRatio = 2.0;
+      final ui.Image captured = await boundary.toImage(pixelRatio: pixelRatio);
+      final ByteData? byteData = await captured.toByteData(format: ui.ImageByteFormat.png);
+      if (byteData == null) throw Exception('Failed to capture image bytes');
 
-    final cropX = (centerX - size / 2 - translate.x / scale).clamp(
-      0,
-      _originImage.width - size,
-    );
+      final Uint8List pngBytes = byteData.buffer.asUint8List();
+      debugPrint('Captured preview bytes length=${pngBytes.length}');
 
-    final cropY = (centerY - size / 2 - translate.y / scale).clamp(
-      0,
-      _originImage.height - size,
-    );
+      // Decode with package:image to ensure consistent PNG and to enforce size (512x512)
+      img.Image? decoded = img.decodeImage(pngBytes);
+      if (decoded == null) throw Exception('Failed to decode captured image');
 
-    img.Image cropped = img.copyCrop(
-      _originImage,
-      x: cropX.round(),
-      y: cropY.round(),
-      width: size,
-      height: size,
-    );
+      // Resize to 512x512 to match previous behavior
+      final img.Image resized = img.copyResize(decoded, width: 512, height: 512);
 
-    if (_rotation != 0) {
-      cropped = img.copyRotate(cropped, angle: _rotation * 180 / pi);
-    }
-
-    cropped = img.copyResize(cropped, width: 512, height: 512);
-
-    // ===== MASK BULAT =====
-    final circle = img.Image(width: 512, height: 512);
-    const radius = 256;
-
-    for (int y = 0; y < 512; y++) {
-      for (int x = 0; x < 512; x++) {
-        final dx = x - radius;
-        final dy = y - radius;
-        if (dx * dx + dy * dy <= radius * radius) {
-          circle.setPixel(x, y, cropped.getPixel(x, y));
+      // Ensure circular mask (in case platform didn't preserve transparent corners)
+      final circle = img.Image(width: 512, height: 512);
+      const radius = 256;
+      final center = radius;
+      // Remove call to fill() which is not present in package:image; default pixels are 0.
+      for (int y = 0; y < 512; y++) {
+        for (int x = 0; x < 512; x++) {
+          final dx = x - center;
+          final dy = y - center;
+          if (dx * dx + dy * dy <= radius * radius) {
+            circle.setPixel(x, y, resized.getPixel(x, y));
+          }
         }
       }
+
+      final dir = await getApplicationDocumentsDirectory();
+      final file = File('${dir.path}/profile_circle.png');
+      await file.writeAsBytes(img.encodePng(circle));
+
+      if (mounted) Navigator.pop(context, file);
+    } catch (e, st) {
+      debugPrint('Error while saving crop: $e\n$st');
+      // fallback - try previous programmatic approach for compatibility
+      await _saveProgrammaticFallback();
     }
+  }
 
-    final dir = await getApplicationDocumentsDirectory();
-    final file = File('${dir.path}/profile_circle.png');
-    await file.writeAsBytes(img.encodePng(circle));
+  // Fallback: original programmatic crop method kept for safety if capture fails
+  Future<void> _saveProgrammaticFallback() async {
+    try {
+      final matrix = _controller.value;
 
-    if (mounted) Navigator.pop(context, file);
+      final scale = matrix.getMaxScaleOnAxis();
+      final translation = matrix.getTranslation();
+
+      final imageW = _originImage.width.toDouble();
+      final imageH = _originImage.height.toDouble();
+
+      final double squareSize = min(imageW, imageH);
+      final double centerX = imageW / 2;
+      final double centerY = imageH / 2;
+      final double cropSize = squareSize / scale;
+
+      final double cropX = (centerX - cropSize / 2 - translation.x / scale).clamp(0, imageW - cropSize);
+      final double cropY = (centerY - cropSize / 2 - translation.y / scale).clamp(0, imageH - cropSize);
+
+      img.Image cropped = img.copyCrop(
+        _originImage,
+        x: cropX.round(),
+        y: cropY.round(),
+        width: cropSize.round(),
+        height: cropSize.round(),
+      );
+
+      if (_rotation != 0) {
+        cropped = img.copyRotate(cropped, angle: _rotation * 180 / pi);
+      }
+
+      cropped = img.copyResize(cropped, width: 512, height: 512);
+
+      final circle = img.Image(width: 512, height: 512);
+      const radius = 256;
+
+      for (int y = 0; y < 512; y++) {
+        for (int x = 0; x < 512; x++) {
+          final dx = x - radius;
+          final dy = y - radius;
+          if (dx * dx + dy * dy <= radius * radius) {
+            circle.setPixel(x, y, cropped.getPixel(x, y));
+          }
+        }
+      }
+
+      final dir = await getApplicationDocumentsDirectory();
+      final file = File('${dir.path}/profile_circle.png');
+      await file.writeAsBytes(img.encodePng(circle));
+
+      if (mounted) Navigator.pop(context, file);
+    } catch (e, st) {
+      debugPrint('Fallback crop failed: $e\n$st');
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text('Gagal memproses crop')));
+      }
+    }
   }
 
   @override
@@ -133,18 +202,21 @@ class _CircleCropScreenState extends State<CircleCropScreen> {
         children: [
           Expanded(
             child: Center(
-              child: AspectRatio(
-                aspectRatio: 1,
-                child: ClipOval(
-                  child: InteractiveViewer(
-                    transformationController: _controller,
-                    minScale: 0.8,
-                    maxScale: 4,
-                    child: Transform.rotate(
-                      angle: _rotation,
-                      child: Image.file(
-                        widget.imageFile,
-                        fit: BoxFit.cover,
+              child: RepaintBoundary(
+                key: _previewKey,
+                child: AspectRatio(
+                  aspectRatio: 1,
+                  child: ClipOval(
+                    child: InteractiveViewer(
+                      transformationController: _controller,
+                      minScale: 0.8,
+                      maxScale: 4,
+                      child: Transform.rotate(
+                        angle: _rotation,
+                        child: Image.file(
+                          widget.imageFile,
+                          fit: BoxFit.cover,
+                        ),
                       ),
                     ),
                   ),

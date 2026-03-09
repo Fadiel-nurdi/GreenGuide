@@ -80,7 +80,8 @@ class SuperAdminEcosystemScreen extends StatelessWidget {
         ),
       ),
 
-      body: StreamBuilder<QuerySnapshot<Map<String, dynamic>>>(
+        body: SafeArea(
+          child: StreamBuilder<QuerySnapshot<Map<String, dynamic>>>(
         stream: _ref.snapshots(),
         builder: (context, snapshot) {
           if (snapshot.connectionState == ConnectionState.waiting) {
@@ -133,6 +134,7 @@ class SuperAdminEcosystemScreen extends StatelessWidget {
           );
         },
       ),
+        )
     );
   }
 

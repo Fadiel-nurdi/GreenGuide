@@ -166,7 +166,7 @@ class _SuperAdminHomeScreenState extends State<SuperAdminHomeScreen> {
         final admins = allDocs.where((d) {
           final data = d.data() as Map<String, dynamic>;
           final role = data['role'];
-          return role == 'admin' || role == 'super_admin';
+          return role == 'admin';
         }).toList();
 
         final total = admins.length;
@@ -220,7 +220,7 @@ class _SuperAdminHomeScreenState extends State<SuperAdminHomeScreen> {
             final admins = snap.data!.docs.where((d) {
               final data = d.data() as Map<String, dynamic>;
               final role = data['role'];
-              return role == 'admin' || role == 'super_admin';
+              return role == 'admin';
             }).toList();
 
             return Column(

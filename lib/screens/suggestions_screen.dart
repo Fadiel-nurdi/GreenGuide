@@ -29,6 +29,7 @@ class _SuggestionsScreenState extends State<SuggestionsScreen> {
 
   Future<void> _init() async {
     try {
+      // Anonymous auth
       if (_auth.currentUser == null) {
         final cred = await _auth.signInAnonymously();
         _user = cred.user;
@@ -36,21 +37,21 @@ class _SuggestionsScreenState extends State<SuggestionsScreen> {
         _user = _auth.currentUser;
       }
 
-      // Determine role (admin / super_admin) if the user is authenticated with a uid
-      try {
-        if (_user != null && !_user!.isAnonymous) {
-          final doc = await FirebaseFirestore.instance.collection('admins').doc(_user!.uid).get();
+      // Role detection
+      if (_user != null && !_user!.isAnonymous) {
+        try {
+          final doc = await FirebaseFirestore.instance
+              .collection('admins')
+              .doc(_user!.uid)
+              .get();
+
           if (doc.exists) {
-            final data = doc.data();
-            final r = data?['role'];
-            if (r != null && (r == 'admin' || r == 'super_admin')) {
-              _role = r as String;
+            final r = doc.data()?['role'];
+            if (r == 'admin' || r == 'super_admin') {
+              _role = r;
             }
           }
-        }
-      } catch (e) {
-        // ignore role detection errors
-        print('Role detection error: $e');
+        } catch (_) {}
       }
 
       final prefs = await SharedPreferences.getInstance();
@@ -59,16 +60,18 @@ class _SuggestionsScreenState extends State<SuggestionsScreen> {
       if (stored != null && stored.isNotEmpty) {
         final s = await _service.getSuggestionById(stored);
 
+        // Cek apakah saran masih ada DAN milik device ini (tidak peduli userId)
         if (s == null) {
+          // Saran sudah dihapus, bersihkan local storage
           await prefs.remove('suggestion_id');
-          _localSuggestionId = null; // 🔥 WAJIB TAMBAH INI
+          _localSuggestionId = null;
         } else {
+          // Saran masih ada, device ini sudah pernah submit
           _localSuggestionId = stored;
         }
       } else {
-        _localSuggestionId = null; // 🔥 WAJIB TAMBAH INI
+        _localSuggestionId = null;
       }
-
     } catch (e) {
       print("INIT ERROR: $e");
     } finally {
@@ -111,10 +114,9 @@ class _SuggestionsScreenState extends State<SuggestionsScreen> {
 
   Future<void> _confirmDelete(SuggestionRecord s) async {
     final prefs = await SharedPreferences.getInstance();
-    final storedId = prefs.getString('suggestion_id');
 
-    final isOwnerByDevice = storedId == s.id;
-    final canDelete = isOwnerByDevice || (_role == 'admin');
+    // HANYA ADMIN YANG BISA DELETE (bukan device owner)
+    final canDelete = (_role == 'admin');
 
     if (!canDelete) return;
 
@@ -134,6 +136,7 @@ class _SuggestionsScreenState extends State<SuggestionsScreen> {
 
     await _service.deleteSuggestion(s.id);
 
+    final storedId = prefs.getString('suggestion_id');
     if (storedId == s.id) {
       await prefs.remove('suggestion_id');
       setState(() => _localSuggestionId = null);
@@ -145,7 +148,6 @@ class _SuggestionsScreenState extends State<SuggestionsScreen> {
     }
   }
 
-
   @override
   Widget build(BuildContext context) {
     if (_loading) return const Scaffold(body: Center(child: CircularProgressIndicator()));
@@ -155,9 +157,9 @@ class _SuggestionsScreenState extends State<SuggestionsScreen> {
       appBar: AppBar(title: const Text('Saran & Masukan')),
       floatingActionButton: (_localSuggestionId == null && _role != 'super_admin')
           ? FloatingActionButton(
-              onPressed: () => _openForm(),
-              child: const Icon(Icons.add_comment),
-            )
+        onPressed: () => _openForm(),
+        child: const Icon(Icons.add_comment),
+      )
           : null,
       body: StreamBuilder<List<SuggestionRecord>>(
         stream: _service.streamSuggestions(),
@@ -166,13 +168,19 @@ class _SuggestionsScreenState extends State<SuggestionsScreen> {
           final data = snap.data ?? [];
           if (data.isEmpty) return const Center(child: Text('Belum ada saran'));
 
+          data.sort((a, b) {
+            if (_localSuggestionId == a.id) return -1;
+            if (_localSuggestionId == b.id) return 1;
+            return b.createdAt.compareTo(a.createdAt);
+          });
+
           return ListView.builder(
             padding: const EdgeInsets.all(12),
             itemCount: data.length,
             itemBuilder: (ctx, i) {
               final s = data[i];
-              final isOwnerByDevice = _localSuggestionId == s.id;
-              final canDelete = isOwnerByDevice || (_role == 'admin');
+              // HANYA ADMIN YANG BISA DELETE (bukan device owner)
+              final canDelete = (_role == 'admin');
               final showDelete = canDelete && (_role != 'super_admin'); // super admin read-only
 
               return Card(
@@ -182,9 +190,9 @@ class _SuggestionsScreenState extends State<SuggestionsScreen> {
                   subtitle: Text(s.message),
                   trailing: showDelete
                       ? IconButton(
-                          icon: const Icon(Icons.delete, color: Colors.red),
-                          onPressed: () => _confirmDelete(s),
-                        )
+                    icon: const Icon(Icons.delete, color: Colors.red),
+                    onPressed: () => _confirmDelete(s),
+                  )
                       : null,
                 ),
               );
@@ -195,7 +203,6 @@ class _SuggestionsScreenState extends State<SuggestionsScreen> {
     );
   }
 }
-
 
 class _SuggestionForm extends StatefulWidget {
   final SuggestionRecord? suggestion;
@@ -237,7 +244,6 @@ class _SuggestionFormState extends State<_SuggestionForm> {
     _message.text = s.message;
   }
 
-
   Future<void> _load(String id) async {
     setState(() => _initialLoading = true);
     final s = await _service.getSuggestionById(id);
@@ -270,8 +276,6 @@ class _SuggestionFormState extends State<_SuggestionForm> {
         widget.onCreated?.call(id);
         if (mounted) ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text('Saran dikirim')));
       } else {
-        // editing not supported for suggestions per requirement (only one per device)
-        // but owner could re-submit by deleting and creating again; so we block edit here.
         if (mounted) ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text('Edit tidak didukung untuk saran')));
       }
 
@@ -283,27 +287,8 @@ class _SuggestionFormState extends State<_SuggestionForm> {
     }
   }
 
-  Future<void> _delete() async {
-    final idToDelete = widget.suggestion?.id ?? _loaded?.id;
-    if (idToDelete == null) return;
-    final ok = await showDialog<bool>(context: context, builder: (ctx) => AlertDialog(title: const Text('Hapus'), content: const Text('Hapus saran?'), actions: [TextButton(onPressed: () => Navigator.pop(ctx, false), child: const Text('Batal')), TextButton(onPressed: () => Navigator.pop(ctx, true), child: const Text('Hapus'))]));
-    if (ok != true) return;
-    try {
-      await _service.deleteSuggestion(idToDelete);
-      final prefs = await SharedPreferences.getInstance();
-      final stored = prefs.getString('suggestion_id');
-      if (stored == idToDelete) await prefs.remove('suggestion_id');
-      widget.onDeleted?.call(idToDelete);
-      if (mounted) ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text('Saran dihapus')));
-      if (mounted) Navigator.pop(context);
-    } catch (e) {
-      if (mounted) ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text('Gagal hapus: $e')));
-    }
-  }
-
   @override
   Widget build(BuildContext context) {
-    // Use SafeArea + SingleChildScrollView + ConstrainedBox to prevent bottom overflow
     return Material(
       color: Theme.of(context).scaffoldBackgroundColor,
       child: SafeArea(
@@ -311,7 +296,6 @@ class _SuggestionFormState extends State<_SuggestionForm> {
           padding: EdgeInsets.only(bottom: MediaQuery.of(context).viewInsets.bottom + 12, left: 16, right: 16, top: 12),
           child: ConstrainedBox(
             constraints: BoxConstraints(
-              // allow the sheet to grow but not exceed 90% of screen height
               maxHeight: MediaQuery.of(context).size.height * 0.9,
             ),
             child: IntrinsicHeight(
@@ -356,19 +340,12 @@ class _SuggestionFormState extends State<_SuggestionForm> {
                           textInputAction: TextInputAction.newline,
                         ),
                         const SizedBox(height: 12),
-                        Row(children: [
-                          Expanded(
-                            child: ElevatedButton(
-                              onPressed: _loading ? null : _submit,
-                              child: _loading
-                                  ? const SizedBox(width: 18, height: 18, child: CircularProgressIndicator(strokeWidth: 2))
-                                  : const Text('Kirim'),
-                            ),
-                          ),
-                          const SizedBox(width: 8),
-                          if (widget.suggestion != null)
-                            OutlinedButton(onPressed: _delete, child: const Text('Hapus'))
-                        ])
+                        ElevatedButton(
+                          onPressed: _loading ? null : _submit,
+                          child: _loading
+                              ? const SizedBox(width: 18, height: 18, child: CircularProgressIndicator(strokeWidth: 2))
+                              : const Text('Kirim'),
+                        )
                       ],
                     ),
                   ),
@@ -381,4 +358,3 @@ class _SuggestionFormState extends State<_SuggestionForm> {
     );
   }
 }
-

@@ -5,6 +5,7 @@ import 'package:cloud_firestore/cloud_firestore.dart';
 import 'admin_home_screen.dart';
 import 'admin_profile_screen.dart';
 import 'admin_ecosystem_list_screen.dart';
+import 'admin_reference_list_screen.dart';
 import 'admin_activity_screen.dart';
 import 'admin_testimonial_screen.dart';
 
@@ -65,10 +66,6 @@ class AdminNav extends StatelessWidget {
               width: 64,
               height: 64,
               alignment: Alignment.center,
-              child: Image.asset(
-                'assets/Images/Logo.png',
-                fit: BoxFit.contain,
-              ),
             ),
           ),
 
@@ -96,6 +93,13 @@ class AdminNav extends StatelessWidget {
             onTap: () => _go(context, AdminEcosystemListScreen.routeName),
           ),
 
+          // ================= KELOLA DAFTAR PUSTAKA =================
+          ListTile(
+            leading: const Icon(Icons.menu_book),
+            title: const Text('Kelola Daftar Pustaka'),
+            onTap: () => _go(context, AdminReferenceListScreen.routeName),
+          ),
+
           // ================= AKTIVITAS =================
           ListTile(
             leading: const Icon(Icons.history),
@@ -113,7 +117,7 @@ class AdminNav extends StatelessWidget {
           ListTile(
             leading: const Icon(Icons.feedback),
             title: const Text('Saran & Masukan'),
-            onTap: () => _go(context, '/suggestions'),
+            onTap: () => _go(context, '/admin/suggestions'),
           ),
 
           const Divider(),
@@ -125,57 +129,32 @@ class AdminNav extends StatelessWidget {
               'Logout',
               style: TextStyle(color: Colors.red),
             ),
-            onTap: () async {
-              Navigator.pop(context);
+              onTap: () async {
+                Navigator.of(context).pop(); // tutup drawer dulu
 
-              try {
-                final user = FirebaseAuth.instance.currentUser;
+                try {
+                  final user = FirebaseAuth.instance.currentUser;
 
-                if (user != null) {
-                  final adminRef = FirebaseFirestore.instance.collection('admins').doc(user.uid);
-                  try {
-                    await adminRef.update({
+                  if (user != null) {
+                    await FirebaseFirestore.instance
+                        .collection('admins')
+                        .doc(user.uid)
+                        .update({
                       'isOnline': false,
-                      'isonline': false,
                       'lastSeen': FieldValue.serverTimestamp(),
-                      'lastAction': 'logout',
-                      'lastActionAt': FieldValue.serverTimestamp(),
                     });
-                  } catch (e) {
-                    // Fallback: try set with merge in case update is blocked for some fields
-                    try {
-                      await adminRef.set({
-                        'isOnline': false,
-                        'isonline': false,
-                        'lastSeen': FieldValue.serverTimestamp(),
-                        'lastAction': 'logout',
-                        'lastActionAt': FieldValue.serverTimestamp(),
-                      }, SetOptions(merge: true));
-                    } catch (e2) {
-                      // Give feedback but proceed to sign out to avoid locking user in app
-                      print('Failed to clear admin online flag: $e2');
-                      if (context.mounted) {
-                        ScaffoldMessenger.of(context).showSnackBar(
-                          const SnackBar(content: Text('Gagal menghapus status online di server. Anda tetap akan logout secara lokal.')),
-                        );
-                      }
-                    }
                   }
-                }
 
-                await FirebaseAuth.instance.signOut();
+                  await FirebaseAuth.instance.signOut();
 
-                if (context.mounted) {
-                  Navigator.pushNamedAndRemoveUntil(
-                    context,
-                    '/admin-login',
-                        (_) => false,
-                  );
+                  // gunakan root navigator
+                  Navigator.of(context, rootNavigator: true)
+                      .pushNamedAndRemoveUntil('/admin-login', (route) => false);
+
+                } catch (e) {
+                  print("LOGOUT ERROR: $e");
                 }
-              } catch (e) {
-                print("LOGOUT ERROR: $e");
               }
-            },
           ),
         ],
       ),

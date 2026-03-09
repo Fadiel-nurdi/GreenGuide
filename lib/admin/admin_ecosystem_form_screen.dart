@@ -1,6 +1,7 @@
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:flutter/material.dart';
 import 'admin_activity_logger.dart';
+import 'dart:async';
 
 class AdminEcosystemFormScreen extends StatefulWidget {
   const AdminEcosystemFormScreen({Key? key}) : super(key: key);
@@ -21,10 +22,10 @@ class _AdminEcosystemFormScreenState
 
   String _ecosystem = 'Mangrove';
   String? _docId;
+  int _ecoNumber = 0;
 
   // ===== AUTO ID =====
   final _ecoIdC = TextEditingController();
-  int _ecoNumber = 0;
 
   // ===== MANGROVE =====
   String? _substratValue;
@@ -45,17 +46,20 @@ class _AdminEcosystemFormScreenState
   @override
   void initState() {
     super.initState();
-    WidgetsBinding.instance.addPostFrameCallback((_) async {
+    WidgetsBinding.instance.addPostFrameCallback((_) {
       final args = ModalRoute.of(context)?.settings.arguments;
 
       if (args is String) {
         _docId = args;
-        await _loadData();
+        // For edit, wait for data to load before showing form
+        _loadData().whenComplete(() {
+          if (mounted) setState(() => _loading = false);
+        });
       } else {
-        await _generateEcoId();
+        _generatePreviewEcoId().whenComplete(() {
+          if (mounted) setState(() => _loading = false);
+        });
       }
-
-      if (mounted) setState(() => _loading = false);
     });
   }
 
@@ -71,72 +75,105 @@ class _AdminEcosystemFormScreenState
     super.dispose();
   }
 
-  // ================= AUTO ID =================
-  Future<void> _generateEcoId() async {
-    final prefix = _ecosystem == 'Mangrove' ? 'M' : 'DR';
+  // ================= LOAD =================
+  Future<void> _loadData() async {
+    try {
+      final doc = await FirebaseFirestore.instance
+          .collection('ecosystems')
+          .doc(_docId)
+          .get()
+          .timeout(const Duration(seconds: 6));
 
-    final snap = await FirebaseFirestore.instance
+      final d = doc.data();
+      if (d == null) return;
+
+      if (!mounted) return;
+      _ecosystem = d['ecosystem'];
+      _ecoIdC.text = d['ecoId'];
+
+      if (_ecosystem == 'Mangrove') {
+        _substratValue = d['substrat'];
+        _salinitasValue = d['salinitas'];
+        _jenisMangroveValue = d['jenis_ekosistem_mangrove'];
+        _lokasiPasangSurutValue = d['lokasi_pasang_surut'];
+      } else {
+        _ketinggianC.text = d['ketinggian'] ?? '';
+        _curahHujanC.text = d['curah_hujan'] ?? '';
+        _intensitasCahayaC.text = d['intensitas_cahaya'] ?? '';
+        _suhuUdaraC.text = d['suhu_udara'] ?? '';
+        _phTanahC.text = d['ph_tanah'] ?? '';
+      }
+
+      _rekomendasiC.text = d['rekomendasi_jenis'] ?? '';
+    } on TimeoutException catch (_) {
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(
+            content: Text('Waktu koneksi habis saat memuat data. Coba lagi.'),
+            backgroundColor: Colors.orange,
+          ),
+        );
+      }
+    } catch (e) {
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text('Gagal memuat data: $e'),
+            backgroundColor: Colors.red,
+          ),
+        );
+      }
+    }
+  }
+
+  Future<int> _getNextEcoNumber() async {
+    final snapshot = await FirebaseFirestore.instance
         .collection('ecosystems')
         .where('ecosystem', isEqualTo: _ecosystem)
         .get();
 
-    final usedNumbers = <int>{};
-
-    for (final d in snap.docs) {
-      final n = d.data()['ecoNumber'];
-      if (n is int) usedNumbers.add(n);
+    if (snapshot.docs.isEmpty) {
+      return 1;
     }
 
-    int next = 1;
-    while (usedNumbers.contains(next)) {
-      next++;
+    int maxNumber = 0;
+
+    for (var doc in snapshot.docs) {
+      final number = doc.data()['ecoNumber'] ?? 0;
+      if (number > maxNumber) {
+        maxNumber = number;
+      }
     }
 
-    _ecoNumber = next;
-    _ecoIdC.text = '$prefix-${next.toString().padLeft(3, '0')}';
+    return maxNumber + 1;
   }
 
-  // ================= LOAD =================
-  Future<void> _loadData() async {
-    final doc = await FirebaseFirestore.instance
-        .collection('ecosystems')
-        .doc(_docId)
-        .get();
+  Future<void> _generatePreviewEcoId() async {
+    final nextNumber = await _getNextEcoNumber();
+    final prefix = _ecosystem == 'Mangrove' ? 'M' : 'DR';
 
-    final d = doc.data();
-    if (d == null) return;
+    final ecoIdFormatted =
+        '$prefix-${nextNumber.toString().padLeft(3, '0')}';
 
-    _ecosystem = d['ecosystem'];
-    _ecoNumber = d['ecoNumber'];
-    _ecoIdC.text = d['ecoId'];
+    if (!mounted) return;
 
-    if (_ecosystem == 'Mangrove') {
-      _substratValue = d['substrat'];
-      _salinitasValue = d['salinitas'];
-      _jenisMangroveValue = d['jenis_ekosistem_mangrove'];
-      _lokasiPasangSurutValue = d['lokasi_pasang_surut'];
-    } else {
-      _ketinggianC.text = d['ketinggian'] ?? '';
-      _curahHujanC.text = d['curah_hujan'] ?? '';
-      _intensitasCahayaC.text = d['intensitas_cahaya'] ?? '';
-      _suhuUdaraC.text = d['suhu_udara'] ?? '';
-      _phTanahC.text = d['ph_tanah'] ?? '';
-    }
-
-    _rekomendasiC.text = d['rekomendasi_jenis'] ?? '';
+    setState(() {
+      _ecoNumber = nextNumber;
+      _ecoIdC.text = ecoIdFormatted;
+    });
   }
 
   // ================= SAVE =================
+
   Future<void> _save() async {
     if (!_formKey.currentState!.validate()) return;
+
     setState(() => _saving = true);
 
     final firestore = FirebaseFirestore.instance;
     final ref = firestore.collection('ecosystems');
 
     final data = {
-      'ecoId': _ecoIdC.text,
-      'ecoNumber': _ecoNumber,
       'ecosystem': _ecosystem,
       'rekomendasi_jenis': _rekomendasiC.text.trim(),
       'updatedAt': FieldValue.serverTimestamp(),
@@ -159,51 +196,48 @@ class _AdminEcosystemFormScreenState
       });
     }
 
-    final existSnap = await ref
-        .where('ecoId', isEqualTo: _ecoIdC.text)
-        .limit(1)
-        .get();
+    // CREATE flow: write a temp doc quickly, then assign final ecoId in background
+    if (_docId == null) {
+      try {
+        final docRef = ref.doc();
 
-    // ================= EDIT =================
+        await docRef.set({
+          ...data,
+          'ecoNumber': _ecoNumber,
+          'ecoId': _ecoIdC.text,
+          'createdAt': FieldValue.serverTimestamp(),
+        });
+
+        await AdminActivityLogger.log(
+          action: 'create',
+          ecoId: _ecoIdC.text,
+          ecosystem: _ecosystem,
+        );
+
+        if (!mounted) return;
+        Navigator.pop(context);
+        return;
+      } catch (e) {
+        setState(() => _saving = false);
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text('Gagal menyimpan: $e')),
+        );
+      }
+    }
+
     if (_docId != null) {
-      await ref.doc(_docId).update(data);
+      await ref.doc(_docId).update(data).timeout(const Duration(seconds: 8));
 
       await AdminActivityLogger.log(
         action: 'update',
         ecoId: _ecoIdC.text,
         ecosystem: _ecosystem,
       );
+
+      if (!mounted) return;
+      Navigator.pop(context);
+      return;
     }
-
-    // ================= PREVENT DOUBLE =================
-    else if (existSnap.docs.isNotEmpty) {
-      final docId = existSnap.docs.first.id;
-
-      await ref.doc(docId).update(data);
-
-      await AdminActivityLogger.log(
-        action: 'update',
-        ecoId: _ecoIdC.text,
-        ecosystem: _ecosystem,
-      );
-    }
-
-    // ================= CREATE =================
-    else {
-      await ref.add({
-        ...data,
-        'createdAt': FieldValue.serverTimestamp(),
-      });
-
-      await AdminActivityLogger.log(
-        action: 'create',
-        ecoId: _ecoIdC.text,
-        ecosystem: _ecosystem,
-      );
-    }
-
-    if (!mounted) return;
-    Navigator.pop(context);
   }
 
   // ================= UI =================
@@ -216,16 +250,19 @@ class _AdminEcosystemFormScreenState
     }
 
     return Scaffold(
+      resizeToAvoidBottomInset: true,
       appBar: AppBar(
         title:
         Text(_docId == null ? 'Tambah Data Ekosistem' : 'Edit Data Ekosistem'),
         backgroundColor: Colors.green[700],
       ),
-      body: Form(
-        key: _formKey,
-        child: ListView(
+        body: SingleChildScrollView(
           padding: const EdgeInsets.all(16),
-          children: [
+          child: Form(
+            key: _formKey,
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
             TextFormField(
               controller: _ecoIdC,
               readOnly: true,
@@ -247,7 +284,7 @@ class _AdminEcosystemFormScreenState
                   ? null
                   : (v) async {
                 setState(() => _ecosystem = v!);
-                await _generateEcoId();
+                await _generatePreviewEcoId();
               },
             ),
 
@@ -358,6 +395,7 @@ class _AdminEcosystemFormScreenState
           ],
         ),
       ),
+    ),
     );
   }
 
@@ -406,13 +444,15 @@ class RekomendasiField extends StatelessWidget {
       child: TextFormField(
         controller: controller,
         maxLines: 3,
+        minLines: 3,
+        keyboardType: TextInputType.multiline,
         textInputAction: TextInputAction.newline,
         decoration: const InputDecoration(
           labelText: 'Rekomendasi',
         ),
         validator: (v) =>
         v == null || v.trim().isEmpty ? 'Wajib diisi' : null,
-      ),
+      )
     );
   }
 }

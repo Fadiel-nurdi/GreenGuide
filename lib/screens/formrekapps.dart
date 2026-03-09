@@ -59,7 +59,8 @@ class _FormRekAppsScreenState extends State<FormRekAppsScreen> {
       const order = [
         'Rendah 0 - 100',
         'Menengah 101 - 300',
-        'Tinggi 301 - 500'
+        'Tinggi 301 - 500',
+        'Sangat Tinggi > 500'
       ];
       list.sort((a, b) => order.indexOf(a).compareTo(order.indexOf(b)));
       return list;

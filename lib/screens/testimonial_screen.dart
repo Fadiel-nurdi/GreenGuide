@@ -26,6 +26,7 @@ class _TestimonialScreenState extends State<TestimonialScreen> {
   void initState() {
     super.initState();
     _initUser();
+    _monitorTestimonialStatus();
   }
 
   Future<void> _initUser() async {
@@ -64,6 +65,32 @@ class _TestimonialScreenState extends State<TestimonialScreen> {
     }
   }
 
+  /// Monitor real-time changes di Firestore untuk mendeteksi jika testimoni device dihapus
+  void _monitorTestimonialStatus() {
+    _service.streamTestimonials().listen((testimonials) async {
+      if (_localTestimonialId == null) return;
+
+      // Cek apakah testimoni yang tersimpan masih ada di Firestore
+      final exists = testimonials.any((t) => t.id == _localTestimonialId);
+
+      if (!exists && _localTestimonialId != null) {
+        // Testimoni dihapus (baik oleh user sendiri atau admin)
+        final prefs = await SharedPreferences.getInstance();
+        await prefs.remove('testimonial_id');
+
+        if (mounted) {
+          setState(() => _localTestimonialId = null);
+          ScaffoldMessenger.of(context).showSnackBar(
+            const SnackBar(
+              content: Text('Testimoni Anda telah dihapus. Anda bisa menambah testimoni baru.'),
+              duration: Duration(seconds: 3),
+            ),
+          );
+        }
+      }
+    });
+  }
+
 
   void _openForm({TestimonialRecord? testimonial}) async {
     // Pass testimonialId to the form and open bottom sheet immediately so we
@@ -99,7 +126,11 @@ class _TestimonialScreenState extends State<TestimonialScreen> {
                     // Save per-device id
                     final prefs = await SharedPreferences.getInstance();
                     await prefs.setString('testimonial_id', id);
-                    setState(() => _localTestimonialId = id);
+                    if (mounted) {
+                      setState(() => _localTestimonialId = id);
+                      // Close bottom sheet AFTER setState
+                      Navigator.pop(context);
+                    }
                   },
                   onDeleted: (id) async {
                     // If deleted, clear local key
@@ -107,7 +138,11 @@ class _TestimonialScreenState extends State<TestimonialScreen> {
                     final stored = prefs.getString('testimonial_id');
                     if (stored == id) {
                       await prefs.remove('testimonial_id');
-                      setState(() => _localTestimonialId = null);
+                      if (mounted) {
+                        setState(() => _localTestimonialId = null);
+                        // Close bottom sheet AFTER setState
+                        Navigator.pop(context);
+                      }
                     }
                   },
                 ),
@@ -167,6 +202,27 @@ class _TestimonialScreenState extends State<TestimonialScreen> {
     }
   }
 
+  /// Build FAB yang cek real-time apakah user sudah punya testimoni
+  Widget _buildFAB(String userId) {
+    return StreamBuilder<List<TestimonialRecord>>(
+      stream: _service.streamTestimonials(),
+      builder: (context, snap) {
+        final data = snap.data ?? [];
+        final userHasTestimonial = data.any((t) => t.userId == userId);
+
+        // Tampilkan + button hanya jika user TIDAK punya testimonial
+        if (userHasTestimonial) {
+          return const SizedBox.shrink(); // Hide FAB
+        }
+
+        return FloatingActionButton(
+          onPressed: () => _openForm(),
+          child: const Icon(Icons.add),
+        );
+      },
+    );
+  }
+
   // ================= BUILD (HANYA SATU) =================
   @override
   Widget build(BuildContext context) {
@@ -188,10 +244,7 @@ class _TestimonialScreenState extends State<TestimonialScreen> {
       appBar: AppBar(
         title: const Text('Testimoni Pengguna'),
       ),
-      floatingActionButton: FloatingActionButton(
-        onPressed: () => _openForm(),
-        child: const Icon(Icons.add),
-      ),
+      floatingActionButton: _buildFAB(userId),
       body: Column(
         children: [
 
@@ -245,9 +298,17 @@ class _TestimonialScreenState extends State<TestimonialScreen> {
                 }
 
                 final data = snap.data ?? [];
+
                 if (data.isEmpty) {
                   return const Center(child: Text('Belum ada testimoni'));
                 }
+
+                // Pisahkan: testimoni user sendiri vs user lain
+                final userTestimonials = data.where((t) => t.userId == userId).toList();
+                final otherTestimonials = data.where((t) => t.userId != userId).toList();
+
+                // Gabung: milik user sendiri PALING ATAS
+                final allTestimonials = [...userTestimonials, ...otherTestimonials];
 
                 return ListView.builder(
                   padding: const EdgeInsets.fromLTRB(
@@ -256,34 +317,71 @@ class _TestimonialScreenState extends State<TestimonialScreen> {
                     12,
                     90, // ⬅️ INI KUNCINYA (ruang untuk tombol +)
                   ),
-                  itemCount: data.length,
+                  itemCount: allTestimonials.length,
                   itemBuilder: (_, i) {
-                    final t = data[i];
-                    final isMine = t.userId == userId;
+                    final t = allTestimonials[i];
+                    final isOwn = t.userId == userId;
 
                     return Card(
                       margin: const EdgeInsets.only(bottom: 12),
+                      color: Colors.white,
                       child: Padding(
                         padding: const EdgeInsets.all(12),
                         child: Column(
                           crossAxisAlignment: CrossAxisAlignment.start,
                           children: [
-                            Row(
-                              children: [
-                                Expanded(
-                                  child: Text(
-                                    '${t.name} • Angkatan ${t.angkatan}',
-                                    style: const TextStyle(
-                                      fontWeight: FontWeight.bold,
-                                    ),
+                            // Container biru untuk nama, angkatan, dan testimoni
+                            Container(
+                              padding: const EdgeInsets.all(12),
+                              decoration: BoxDecoration(
+                                color: isOwn ? Colors.blue.shade50 : Colors.transparent,
+                                borderRadius: BorderRadius.circular(8),
+                              ),
+                              child: Column(
+                                crossAxisAlignment: CrossAxisAlignment.start,
+                                children: [
+                                  Row(
+                                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                                    children: [
+                                      Expanded(
+                                        child: Text(
+                                          '${t.name} • Angkatan ${t.angkatan}',
+                                          style: const TextStyle(
+                                            fontWeight: FontWeight.bold,
+                                          ),
+                                        ),
+                                      ),
+                                      if (isOwn)
+                                        Container(
+                                          padding: const EdgeInsets.symmetric(
+                                            horizontal: 8,
+                                            vertical: 4,
+                                          ),
+                                          decoration: BoxDecoration(
+                                            color: Colors.blue,
+                                            borderRadius: BorderRadius.circular(12),
+                                          ),
+                                          child: const Text(
+                                            'Milikmu',
+                                            style: TextStyle(
+                                              color: Colors.white,
+                                              fontSize: 12,
+                                              fontWeight: FontWeight.bold,
+                                            ),
+                                          ),
+                                        ),
+                                    ],
                                   ),
-                                ),
-                                StarRating(rating: t.rating),
-                              ],
+                                  const SizedBox(height: 8),
+                                  Text(t.message),
+                                ],
+                              ),
                             ),
                             const SizedBox(height: 8),
-                            Text(t.message),
-                            if (isMine) ...[
+                            // Bintang di bawah container biru
+                            StarRating(rating: t.rating),
+                            // Edit/Hapus hanya untuk milik user sendiri
+                            if (isOwn) ...[
                               const Divider(),
                               Row(
                                 mainAxisAlignment: MainAxisAlignment.end,
@@ -433,15 +531,13 @@ class _TestimonialFormState extends State<_TestimonialForm> {
           ),
         );
 
-        // Save id locally so device can only submit once
-        final prefs = await SharedPreferences.getInstance();
-        await prefs.setString('testimonial_id', id);
-
         if (mounted) {
+          // Call callback FIRST (which will save to prefs and setState in parent)
           widget.onCreated?.call(id);
           ScaffoldMessenger.of(context).showSnackBar(
             const SnackBar(content: Text('Testimoni berhasil ditambahkan')),
           );
+          // Navigator.pop() will be called by onCreated callback
         }
       } else {
         final idToUpdate = widget.testimonial?.id ?? _loadedTestimonial?.id;
@@ -457,10 +553,9 @@ class _TestimonialFormState extends State<_TestimonialForm> {
           ScaffoldMessenger.of(context).showSnackBar(
             const SnackBar(content: Text('Testimoni berhasil diperbarui')),
           );
+          Navigator.pop(context);
         }
       }
-
-      if (mounted) Navigator.pop(context);
     } catch (e) {
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(content: Text('Gagal menyimpan: $e')),
@@ -571,18 +666,30 @@ class _TestimonialFormState extends State<_TestimonialForm> {
           TextFormField(
             controller: _angkatanCtrl,
             keyboardType: TextInputType.number,
-            decoration: const InputDecoration(
+            decoration: InputDecoration(
               labelText: 'Angkatan',
-              helperText: 'Angkatan minimal 2013',
+              helperText:
+              'Angkatan ${DateTime.now().year - 5} - ${DateTime.now().year}',
             ),
             validator: (v) {
               if (v == null || v.trim().isEmpty) {
                 return 'Angkatan wajib diisi';
               }
+
               final year = int.tryParse(v);
               if (year == null) return 'Angkatan harus berupa angka';
-              if (year < 2013) return 'Angkatan minimal 2013';
-              if (year > DateTime.now().year) return 'Angkatan tidak valid';
+
+              final currentYear = DateTime.now().year;
+              final minYear = currentYear - 5;
+
+              if (year < minYear) {
+                return 'Angkatan minimal $minYear';
+              }
+
+              if (year > currentYear) {
+                return 'Angkatan maksimal $currentYear';
+              }
+
               return null;
             },
           ),
