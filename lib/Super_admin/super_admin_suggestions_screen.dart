@@ -22,31 +22,51 @@ class SuperAdminSuggestionsScreen extends StatelessWidget {
           final data = snap.data ?? [];
           if (data.isEmpty) return const Center(child: Text('Belum ada saran'));
 
-          return ListView.builder(
-            padding: const EdgeInsets.all(12),
-            itemCount: data.length,
-            itemBuilder: (ctx, i) {
-              final s = data[i];
-              return Card(
-                margin: const EdgeInsets.only(bottom: 8),
-                child: ListTile(
-                  title: Text(s.name),
-                  subtitle: Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      if (s.angkatan.isNotEmpty) Text('Angkatan: ${s.angkatan}'),
-                      const SizedBox(height: 6),
-                      Text(s.message),
-                      const SizedBox(height: 6),
-                      Text(
-                        'Tanggal: ${s.createdAt.toLocal()}',
-                        style: const TextStyle(fontSize: 11, color: Colors.grey),
+          return SafeArea(
+            child: ListView.builder(
+              padding: EdgeInsets.fromLTRB(
+                12,
+                12,
+                12,
+                MediaQuery.of(context).padding.bottom + 20,
+              ),
+              itemCount: data.length,
+              itemBuilder: (ctx, i) {
+                final s = data[i];
+
+                return Card(
+                  margin: const EdgeInsets.only(bottom: 8),
+                  child: ListTile(
+                    title: Text(
+                      s.name,
+                      style: const TextStyle(
+                        fontWeight: FontWeight.bold,
                       ),
-                    ],
+                    ),
+                    subtitle: Padding(
+                      padding: const EdgeInsets.only(top: 6),
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          if (s.angkatan.isNotEmpty)
+                            Text('Angkatan: ${s.angkatan}'),
+                          const SizedBox(height: 6),
+                          Text(s.message),
+                          const SizedBox(height: 6),
+                          Text(
+                            'Tanggal: ${s.createdAt.toLocal()}',
+                            style: const TextStyle(
+                              fontSize: 11,
+                              color: Colors.grey,
+                            ),
+                          ),
+                        ],
+                      ),
+                    ),
                   ),
-                ),
-              );
-            },
+                );
+              },
+            ),
           );
         },
       ),

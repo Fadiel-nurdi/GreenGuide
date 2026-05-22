@@ -1,5 +1,5 @@
 import '../models/data_record.dart';
-
+///logika cerdas formm
 class RecommendationResult {
   final List<String> recommendations;
 

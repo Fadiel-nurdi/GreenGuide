@@ -174,29 +174,35 @@ class _SuggestionsScreenState extends State<SuggestionsScreen> {
             return b.createdAt.compareTo(a.createdAt);
           });
 
-          return ListView.builder(
-            padding: const EdgeInsets.all(12),
-            itemCount: data.length,
-            itemBuilder: (ctx, i) {
-              final s = data[i];
-              // HANYA ADMIN YANG BISA DELETE (bukan device owner)
-              final canDelete = (_role == 'admin');
-              final showDelete = canDelete && (_role != 'super_admin'); // super admin read-only
+          return SafeArea(
+            child: ListView.builder(
+              padding: EdgeInsets.fromLTRB(
+                12,
+                12,
+                12,
+                MediaQuery.of(context).padding.bottom + 90,
+              ),
+              itemCount: data.length,
+              itemBuilder: (ctx, i) {
+                final s = data[i];
+                final canDelete = (_role == 'admin');
+                final showDelete = canDelete && (_role != 'super_admin');
 
-              return Card(
-                margin: const EdgeInsets.only(bottom: 12),
-                child: ListTile(
-                  title: Text(s.name),
-                  subtitle: Text(s.message),
-                  trailing: showDelete
-                      ? IconButton(
-                    icon: const Icon(Icons.delete, color: Colors.red),
-                    onPressed: () => _confirmDelete(s),
-                  )
-                      : null,
-                ),
-              );
-            },
+                return Card(
+                  margin: const EdgeInsets.only(bottom: 12),
+                  child: ListTile(
+                    title: Text(s.name),
+                    subtitle: Text(s.message),
+                    trailing: showDelete
+                        ? IconButton(
+                      icon: const Icon(Icons.delete, color: Colors.red),
+                      onPressed: () => _confirmDelete(s),
+                    )
+                        : null,
+                  ),
+                );
+              },
+            ),
           );
         },
       ),

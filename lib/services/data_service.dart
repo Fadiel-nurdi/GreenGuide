@@ -8,8 +8,7 @@ import 'package:path_provider/path_provider.dart';
 
 import '../models/plant.dart';
 import '../models/data_record.dart'; // ⬅️ WAJIB
-
-
+///konektor firestore/otak gadaa ini gada otak!!
 class DataService {
   DataService._();
   static final DataService instance = DataService._();
@@ -77,7 +76,7 @@ class DataService {
   }
 
   // =====================================================
-// ✅ DAFTAR PUSTAKA (GLOBAL + SESUAI EKOSISTEM)
+// ✅ DAFTAR PUSTAKA (GLOBAL + SESUAI EKOSISTEM BIAR GA ACAKADUT)
 // =====================================================
   Future<List<String>> getReferencesByEcosystem(String ecosystem) async {
     final snap = await _firestore
@@ -101,7 +100,7 @@ class DataService {
 
 
   // =====================================================
-  // FIRESTORE – ECOSYSTEMS
+  // FIRESTORE – ECOSYSTEMS //ambil data dari otak/ecosystem
   // =====================================================
   Future<Map<String, List<Map<String, dynamic>>>> _fetchFromFirestore() async {
     final snapshot = await _firestore.collection('ecosystems').get();
@@ -301,11 +300,8 @@ class DataService {
       'rekomendasi_jenis': _safeString(d['rekomendasi_jenis']),
     };
   }
-  // =====================================================
-// =================== TESTIMONI =======================
 // =====================================================
-// =====================================================
-// 📢 SEMUA TESTIMONI (UNTUK HALAMAN TESTIMONI)
+// 📢 SEMUA TESTIMONI (UNTUK HALAMAN TESTIMONI REALTIME DARI OTAK)
 // =====================================================
   Stream<List<TestimonialRecord>> streamTestimonials() {
     return _firestore
@@ -415,7 +411,7 @@ class DataService {
          });
          return;
        }
-
+///ratinggojek
        final totalReviews = snap['totalReviews'] ?? 0;
        final totalRating = snap['totalRating'] ?? 0;
 
@@ -458,7 +454,7 @@ class DataService {
     }
    }
 
-  // ================= SUGGESTIONS =================
+  // ================= SUGGESTIONS =================REALTIME DARI OTAK
   Stream<List<SuggestionRecord>> streamSuggestions() {
     return _firestore
         .collection('suggestions')
@@ -487,7 +483,7 @@ class DataService {
     await _firestore.collection('suggestions').doc(id).delete();
   }
 
-  Future<SuggestionRecord?> getSuggestionById(String id) async {
+  Future<SuggestionRecord?> getSuggestionById(String id) async { ///dokumen spesifik dengan ID
     try {
       final doc = await _firestore.collection('suggestions').doc(id).get();
       if (!doc.exists) return null;

@@ -113,7 +113,7 @@ class _HeroSection extends StatelessWidget {
           ClipRRect(
             borderRadius: BorderRadius.circular(24),
             child: Container(
-              height: 220,
+              height: MediaQuery.of(context).size.width < 400 ? 260 : 220,
               decoration: const BoxDecoration(
                 image: DecorationImage(
                   image: AssetImage('assets/Images/bghome1.jpg'),
@@ -155,7 +155,7 @@ class _HeroSection extends StatelessWidget {
                         ),
                         const SizedBox(height: 6),
                         Text(
-                          'Aplikasi rekomendasi tanaman berdasarkan ekosistem lahan, jenis tanah, ketinggian, pH, dan curah hujan.\n\nSilahkan klik "PANDUAN" untuk penggunaan aplikasi.',
+                          'Aplikasi Green Guide dirancang sebagai alat bantu cerdas yang mampu merekomendasikan jenis tumbuhan secara tepat berdasarkan data biofisik lapangan, sehingga dapat mendukung keberhasilan kegiatan rehabilitasi lahan, penghijauan, serta berbagai program penanaman secara lebih efektif dan berkelanjutan.',
                           style: theme.textTheme.bodySmall?.copyWith(
                             color: Colors.white,
                             height: 1.4,
@@ -208,65 +208,66 @@ class _HeroSection extends StatelessWidget {
                       ],
                     ),
                   ),
-                  Positioned(
-                    left: 18,
-                    bottom: 16,
-                    right: 18,
-                    child: Row(
-                      children: [
-                        Expanded(
-                          child: Container(
-                            height: 18,
-                            decoration: BoxDecoration(
-                              color: Colors.white.withOpacity(0.2),
-                              borderRadius: BorderRadius.circular(999),
-                            ),
-                            padding: const EdgeInsets.symmetric(horizontal: 10),
-                            child: Row(
-                              children: [
-                                Container(
-                                  width: 28,
-                                  height: 8,
-                                  decoration: BoxDecoration(
-                                    color: Colors.white,
-                                    borderRadius: BorderRadius.circular(999),
+                  Padding(
+                    padding: const EdgeInsets.all(18),
+                    child: Align(
+                      alignment: Alignment.bottomCenter,
+                      child: Row(
+                        children: [
+                          Expanded(
+                            child: Container(
+                              height: 18,
+                              decoration: BoxDecoration(
+                                color: Colors.white.withOpacity(0.2),
+                                borderRadius: BorderRadius.circular(999),
+                              ),
+                              padding: const EdgeInsets.symmetric(horizontal: 10),
+                              child: Row(
+                                children: [
+                                  Container(
+                                    width: 28,
+                                    height: 8,
+                                    decoration: BoxDecoration(
+                                      color: Colors.white,
+                                      borderRadius: BorderRadius.circular(999),
+                                    ),
                                   ),
-                                ),
-                                const SizedBox(width: 4),
-                                Container(
-                                  width: 8,
-                                  height: 8,
-                                  decoration: BoxDecoration(
-                                    color: Colors.white.withOpacity(0.8),
-                                    shape: BoxShape.circle,
+                                  const SizedBox(width: 4),
+                                  Container(
+                                    width: 8,
+                                    height: 8,
+                                    decoration: BoxDecoration(
+                                      color: Colors.white.withOpacity(0.8),
+                                      shape: BoxShape.circle,
+                                    ),
                                   ),
-                                ),
-                                const SizedBox(width: 4),
-                                Container(
-                                  width: 8,
-                                  height: 8,
-                                  decoration: BoxDecoration(
-                                    color: Colors.white.withOpacity(0.5),
-                                    shape: BoxShape.circle,
+                                  const SizedBox(width: 4),
+                                  Container(
+                                    width: 8,
+                                    height: 8,
+                                    decoration: BoxDecoration(
+                                      color: Colors.white.withOpacity(0.5),
+                                      shape: BoxShape.circle,
+                                    ),
                                   ),
-                                ),
-                              ],
+                                ],
+                              ),
                             ),
                           ),
-                        ),
-                        const SizedBox(width: 12),
-                        const Row(
-                          children: [
-                            Icon(Icons.public, size: 18, color: Colors.white),
-                            SizedBox(width: 6),
-                            Icon(Icons.camera_alt_outlined,
-                                size: 18, color: Colors.white),
-                            SizedBox(width: 6),
-                            Icon(Icons.language, size: 18, color: Colors.white),
-                          ],
-                        )
-                      ],
-                    ),
+                          const SizedBox(width: 12),
+                          const Row(
+                            children: [
+                              Icon(Icons.public, size: 18, color: Colors.white),
+                              SizedBox(width: 6),
+                              Icon(Icons.camera_alt_outlined,
+                                  size: 18, color: Colors.white),
+                              SizedBox(width: 6),
+                              Icon(Icons.language, size: 18, color: Colors.white),
+                            ],
+                          )
+                        ],
+                      ),
+                    )
                   ),
                 ],
               ),
@@ -666,6 +667,39 @@ class _ContactSection extends StatelessWidget {
             style: theme.textTheme.bodySmall?.copyWith(
               height: 1.5,
               color: Colors.black87,
+            ),
+          ),
+          const SizedBox(height: 14),
+
+          Container(
+            padding: const EdgeInsets.all(12),
+            decoration: BoxDecoration(
+              color: const Color(0xFFF3F8EC),
+              borderRadius: BorderRadius.circular(16),
+              border: Border.all(
+                color: const Color(0xFF4C7C3C).withOpacity(0.15),
+              ),
+            ),
+            child: Row(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                const Icon(
+                  Icons.verified_outlined,
+                  color: Color(0xFF4C7C3C),
+                  size: 22,
+                ),
+                const SizedBox(width: 10),
+
+                Expanded(
+                  child: Text(
+                    'Data ekosistem dan rekomendasi tanaman pada aplikasi Green Guide telah diverifikasi bersama dosen ahli Program Studi Rekayasa Kehutanan ITERA.',
+                    style: theme.textTheme.bodySmall?.copyWith(
+                      height: 1.4,
+                      color: Colors.black87,
+                    ),
+                  ),
+                ),
+              ],
             ),
           ),
           const SizedBox(height: 12),

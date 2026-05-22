@@ -2,13 +2,7 @@ import 'package:flutter/foundation.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 
-/// ===============================
-/// ADMIN ACTIVITY LOGGER (FINAL)
-/// ===============================
-/// Digunakan oleh:
-/// - Admin
-/// - Super Admin
-///
+
 /// Bertanggung jawab untuk:
 /// - Mencatat aktivitas (create / update / delete)
 /// - Menjadi SATU-SATUNYA sumber "Update Terakhir"

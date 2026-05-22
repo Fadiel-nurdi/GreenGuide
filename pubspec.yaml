@@ -2,7 +2,7 @@ name: greenguide_app
 description: A Green Guide demo app scaffold built with Flutter & Dart.
 publish_to: "none"
 
-version: 1.0.0+1
+version: 1.0.4+5
 
 environment:
   sdk: ">=3.5.0 <4.0.0"

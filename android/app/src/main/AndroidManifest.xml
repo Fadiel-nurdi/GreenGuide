@@ -1,16 +1,6 @@
 <manifest xmlns:android="http://schemas.android.com/apk/res/android"
     package="com.example.greenguide_app">
 
-    <!-- ===== PERMISSION ===== -->
-
-    <!-- Android 13+ (Tiramisu) -->
-    <uses-permission android:name="android.permission.READ_MEDIA_IMAGES" />
-
-    <!-- Android <= 12 -->
-    <uses-permission
-        android:name="android.permission.READ_EXTERNAL_STORAGE"
-        android:maxSdkVersion="32" />
-
     <!-- ===== APPLICATION ===== -->
     <application
         android:label="Green Guide"

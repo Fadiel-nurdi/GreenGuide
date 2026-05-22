@@ -1,4 +1,4 @@
-//gapernah dipake lagi karena ini ssitem otomatis
+///gapernah dipake lagi karena ini ssitem otomatis ->manual
 
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';

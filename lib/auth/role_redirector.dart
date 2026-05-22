@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
-
+/// cekstatus login dan role
 class RoleRedirector {
   static Future<void> redirect(BuildContext context) async {
     final user = FirebaseAuth.instance.currentUser;

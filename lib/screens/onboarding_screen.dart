@@ -1,5 +1,5 @@
 import 'package:flutter/material.dart';
-
+///awal semua user
 class OnboardingScreen extends StatelessWidget {
   const OnboardingScreen({super.key});
 

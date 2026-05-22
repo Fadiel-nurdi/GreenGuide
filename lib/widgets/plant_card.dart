@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
 import '../models/plant.dart';
-
+///bikin kartu as
 class PlantCard extends StatelessWidget {
   final Plant plant;
   final VoidCallback? onTap;

@@ -1,6 +1,6 @@
 import '../models/plant.dart';
 import 'data_service.dart';
-
+///ngolah otak
 class RecommendationService {
   final DataService _dataService = DataService.instance;
 
@@ -31,7 +31,7 @@ class RecommendationService {
     }
 
     final land = landType.toLowerCase();
-
+///filtering
     var filtered = all.where((p) {
       // ✅ KUNCI EKOSISTEM (ANTI CAMPUR DATA)
       if (p.landType.toLowerCase() != land) return false;

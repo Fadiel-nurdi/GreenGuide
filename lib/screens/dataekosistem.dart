@@ -246,7 +246,40 @@ class _AboutFooter extends StatelessWidget {
               color: Colors.black87,
             ),
           ),
-          const SizedBox(height: 12),
+          const SizedBox(height: 14),
+
+          Container(
+            padding: const EdgeInsets.all(12),
+            decoration: BoxDecoration(
+              color: const Color(0xFFF3F8EC),
+              borderRadius: BorderRadius.circular(16),
+              border: Border.all(
+                color: const Color(0xFF4C7C3C).withOpacity(0.15),
+              ),
+            ),
+            child: Row(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                const Icon(
+                  Icons.verified_outlined,
+                  color: Color(0xFF4C7C3C),
+                  size: 22,
+                ),
+                const SizedBox(width: 10),
+
+                Expanded(
+                  child: Text(
+                    'Data ekosistem dan rekomendasi tanaman pada aplikasi Green Guide telah diverifikasi bersama dosen ahli Program Studi Rekayasa Kehutanan ITERA.',
+                    style: theme.textTheme.bodySmall?.copyWith(
+                      height: 1.4,
+                      color: Colors.black87,
+                    ),
+                  ),
+                ),
+              ],
+            ),
+          ),
+          const SizedBox(height: 14),
 
 
           // Email

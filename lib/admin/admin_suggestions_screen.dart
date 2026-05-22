@@ -62,38 +62,66 @@ class _AdminSuggestionsScreenState extends State<AdminSuggestionsScreen> {
           final data = snap.data ?? [];
           if (data.isEmpty) return const Center(child: Text('Belum ada saran'));
 
-          return ListView.separated(
-            padding: const EdgeInsets.all(12),
-            itemCount: data.length,
-            separatorBuilder: (_, __) => const SizedBox(height: 8),
-            itemBuilder: (ctx, i) {
-              final s = data[i];
-              return Card(
-                child: ListTile(
-                  title: Text(s.name),
-                  subtitle: Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      if (s.angkatan.isNotEmpty) Text('Angkatan: ${s.angkatan}'),
-                      const SizedBox(height: 6),
-                      Text(s.message),
-                      const SizedBox(height: 6),
-                      Text(
-                        'Tanggal: ${s.createdAt.toLocal()}',
-                        style: const TextStyle(fontSize: 11, color: Colors.grey),
+          return SafeArea(
+            child: ListView.separated(
+              padding: EdgeInsets.fromLTRB(
+                12,
+                12,
+                12,
+                MediaQuery.of(context).padding.bottom + 20,
+              ),
+              itemCount: data.length,
+              separatorBuilder: (_, __) => const SizedBox(height: 8),
+              itemBuilder: (ctx, i) {
+                final s = data[i];
+
+                return Card(
+                  child: ListTile(
+                    title: Text(
+                      s.name,
+                      style: const TextStyle(
+                        fontWeight: FontWeight.bold,
                       ),
-                    ],
+                    ),
+                    subtitle: Padding(
+                      padding: const EdgeInsets.only(top: 6),
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          if (s.angkatan.isNotEmpty)
+                            Text('Angkatan: ${s.angkatan}'),
+                          const SizedBox(height: 6),
+                          Text(s.message),
+                          const SizedBox(height: 8),
+                          Text(
+                            'Tanggal: ${s.createdAt.toLocal()}',
+                            style: const TextStyle(
+                              fontSize: 11,
+                              color: Colors.grey,
+                            ),
+                          ),
+                        ],
+                      ),
+                    ),
+                    trailing: _busy
+                        ? const SizedBox(
+                      width: 24,
+                      height: 24,
+                      child: CircularProgressIndicator(
+                        strokeWidth: 2,
+                      ),
+                    )
+                        : IconButton(
+                      icon: const Icon(
+                        Icons.delete,
+                        color: Colors.red,
+                      ),
+                      onPressed: () => _confirmDelete(s),
+                    ),
                   ),
-                  isThreeLine: true,
-                  trailing: _busy
-                      ? const SizedBox(width: 24, height: 24, child: CircularProgressIndicator(strokeWidth: 2))
-                      : IconButton(
-                          icon: const Icon(Icons.delete, color: Colors.red),
-                          onPressed: () => _confirmDelete(s),
-                        ),
-                ),
-              );
-            },
+                );
+              },
+            ),
           );
         },
       ),

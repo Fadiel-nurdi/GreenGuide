@@ -7,7 +7,7 @@ import '../models/plant.dart';
 // 📚 Referensi statis
 import '../data/mangrove_references.dart';
 import '../data/dataran_rendah_references.dart';
-
+///informasi lengkap tentang satu jenis tanaman
 class PlantDetailScreen extends ConsumerWidget {
   final String id;
   const PlantDetailScreen({super.key, required this.id});
